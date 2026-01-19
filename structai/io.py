@@ -1,13 +1,6 @@
 import os
 import json
 import pickle
-import pandas as pd
-import numpy as np
-from PIL import Image
-try:
-    import torch
-except:
-    pass
 
 
 def load_file(path):
@@ -26,6 +19,7 @@ def load_file(path):
             return [json.loads(line) for line in f]
 
     elif ext == ".csv":
+        import pandas as pd
         return pd.read_csv(path)
 
     elif ext == ".txt":
@@ -41,9 +35,11 @@ def load_file(path):
             return pickle.load(f)
 
     elif ext == ".parquet":
+        import pandas as pd
         return pd.read_parquet(path)
 
     elif ext == ".xlsx":
+        import pandas as pd
         return pd.read_excel(path)
 
     elif ext == ".py":
@@ -51,13 +47,15 @@ def load_file(path):
             return f.read()
 
     elif ext == ".npy":
-        
+        import numpy as np
         return np.load(path)
 
     elif ext == ".pt":
+        import torch
         return torch.load(path)
 
     elif ext in [".png", ".jpg", ".jpeg"]:
+        from PIL import Image
         return Image.open(path)
 
     else:
@@ -87,6 +85,7 @@ def save_file(data, path):
 
     # CSV
     elif ext == ".csv":
+        import pandas as pd
         if isinstance(data, pd.DataFrame):
             data.to_csv(path, index=False)
         else:
@@ -109,6 +108,7 @@ def save_file(data, path):
 
     # Parquet
     elif ext == ".parquet":
+        import pandas as pd
         if isinstance(data, pd.DataFrame):
             data.to_parquet(path, index=False)
         else:
@@ -116,6 +116,7 @@ def save_file(data, path):
 
     # Excel
     elif ext == ".xlsx":
+        import pandas as pd
         if isinstance(data, pd.DataFrame):
             data.to_excel(path, index=False)
         else:
@@ -128,14 +129,18 @@ def save_file(data, path):
 
     # Numpy array
     elif ext == ".npy":
+        import numpy as np
         np.save(path, data)
 
     # PyTorch tensor/model
     elif ext == ".pt":
+        import torch
         torch.save(data, path)
 
     # Image
     elif ext in [".png", ".jpg", ".jpeg"]:
+        import numpy as np
+        from PIL import Image
         if isinstance(data, np.ndarray):
             Image.fromarray(data).save(path)
         else:
