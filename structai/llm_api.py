@@ -269,9 +269,6 @@ class LLMAgent:
         n = kwargs.get('n', 1)
         if system_prompt is None:
             system_prompt = self.system_prompt
-
-        assert '<INPUT' not in system_prompt, f'[===ERROR===][structai][llm_api.py][LLMAgent._llm_api_impl] <INPUT> in system_prompt: {system_prompt}'
-        assert '<INPUT' not in query, f'[===ERROR===][structai][llm_api.py][LLMAgent._llm_api_impl] <INPUT> in query: {query}'
         
         if image_paths is None: # without image
             content = query
