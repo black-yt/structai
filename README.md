@@ -17,9 +17,15 @@ cd structai
 pip install -e .
 ```
 
-## API Reference & Usage
+## Usage
 
-### `load_file(path)`
+> **Note:** Before using LLM-related features, please ensure you have set the necessary environment variables:
+> ```bash
+> export LLM_API_KEY="your-api-key"
+> export LLM_BASE_URL="your-api-base-url"
+> ```
+
+#### `load_file(path)`
 
 Automatically reads a file based on its extension.
 
@@ -38,7 +44,7 @@ df = load_file("data.csv")
 image = load_file("photo.jpg")
 ```
 
-### `save_file(data, path)`
+#### `save_file(data, path)`
 
 Automatically saves data to a file based on the extension.
 
@@ -54,7 +60,7 @@ save_file(data, "output.json")
 save_file(data, "backup.pkl")
 ```
 
-### `print_once(msg)`
+#### `print_once(msg)`
 
 Prints a message to stdout only the first time it is called. Useful for logging inside loops.
 
@@ -66,7 +72,7 @@ for i in range(10):
     # process(i)
 ```
 
-### `make_print_once()`
+#### `make_print_once()`
 
 Returns a new function that prints a message only once. This allows for creating local "print once" scopes.
 
@@ -82,7 +88,7 @@ logger1("Hello") # Does nothing
 logger2("World") # Prints "World"
 ```
 
-### `LLMAgent`
+#### `LLMAgent`
 
 A powerful wrapper class for interacting with OpenAI-compatible LLM APIs. It handles retries, timeouts, and structured output validation.
 
@@ -141,7 +147,7 @@ description = agent(
 )
 ```
 
-### `sanitize_text(text)`
+#### `sanitize_text(text)`
 
 Sanitizes text by keeping only ASCII English characters, digits, and common punctuation. Removes control characters and ANSI codes.
 
@@ -152,7 +158,7 @@ clean = sanitize_text("Hello \x1b[31mWorld\x1b[0m!")
 print(clean) # "Hello World!"
 ```
 
-### `str2dict(s)`
+#### `str2dict(s)`
 
 Robustly converts a string representation of a dictionary to a Python `dict`. It handles common formatting errors and uses `json_repair` as a fallback.
 
@@ -163,7 +169,7 @@ d = str2dict("{'a': 1, 'b': 2}")
 print(d['a']) # 1
 ```
 
-### `str2list(s)`
+#### `str2list(s)`
 
 Robustly converts a string representation of a list to a Python `list`.
 
@@ -174,7 +180,7 @@ l = str2list("[1, 2, 3]")
 print(len(l)) # 3
 ```
 
-### `add_no_proxy_if_private(url)`
+#### `add_no_proxy_if_private(url)`
 
 Checks if the hostname in the URL is a private IP address. If so, it adds it to the `no_proxy` environment variable to bypass proxies.
 
@@ -184,7 +190,7 @@ from structai import add_no_proxy_if_private
 add_no_proxy_if_private("http://192.168.1.100:8080/v1")
 ```
 
-### `read_image(image_path)`
+#### `read_image(image_path)`
 
 Reads an image from a path and returns a PIL Image object.
 
@@ -194,7 +200,7 @@ from structai import read_image
 img = read_image("photo.jpg")
 ```
 
-### `encode_image(image_obj)`
+#### `encode_image(image_obj)`
 
 Encodes a PIL Image object into a base64 string.
 
@@ -204,7 +210,7 @@ from structai import encode_image
 b64_str = encode_image(img)
 ```
 
-### `messages_to_responses_input(messages)`
+#### `messages_to_responses_input(messages)`
 
 Converts standard Chat Completions `messages` format (list of dicts) to the input format required by the Responses API.
 
@@ -215,7 +221,7 @@ messages = [{"role": "user", "content": "Hello"}]
 system_prompt, input_blocks = messages_to_responses_input(messages)
 ```
 
-### `extract_text_outputs(result)`
+#### `extract_text_outputs(result)`
 
 Extracts the text content from an LLM API response object (supports both Chat Completions and Responses API formats).
 
@@ -227,7 +233,7 @@ texts = extract_text_outputs(response)
 print(texts[0])
 ```
 
-### `multi_thread(inp_list, function, max_workers=40, use_tqdm=True)`
+#### `multi_thread(inp_list, function, max_workers=40, use_tqdm=True)`
 
 Executes a function concurrently for each item in `inp_list` using a thread pool.
 
@@ -243,7 +249,7 @@ results = multi_thread(inputs, square, max_workers=4)
 print(results) # [0, 1, 4, 9, ...]
 ```
 
-### `multi_process(inp_list, function, max_workers=40, use_tqdm=True)`
+#### `multi_process(inp_list, function, max_workers=40, use_tqdm=True)`
 
 Executes a function concurrently for each item in `inp_list` using a process pool. Ideal for CPU-bound tasks.
 
@@ -257,7 +263,7 @@ inputs = [{"n": 1000000} for _ in range(5)]
 results = multi_process(inputs, heavy_computation)
 ```
 
-### `run_server(host="0.0.0.0", port=8001)`
+#### `run_server(host="0.0.0.0", port=8001)`
 
 Starts a FastAPI server that acts as a proxy to an OpenAI-compatible LLM provider.
 
@@ -268,7 +274,7 @@ if __name__ == "__main__":
     run_server()
 ```
 
-### `timeout_limit(timeout=None)`
+#### `timeout_limit(timeout=None)`
 
 A decorator that enforces a maximum execution time on a function. Raises `TimeoutError` if the limit is exceeded.
 
@@ -284,7 +290,7 @@ def task():
 task()
 ```
 
-### `run_with_timeout(func, args=(), kwargs=None, timeout=None)`
+#### `run_with_timeout(func, args=(), kwargs=None, timeout=None)`
 
 Runs a function with a specified timeout without using a decorator.
 
@@ -297,7 +303,7 @@ def task(x):
 result = run_with_timeout(task, args=(10,), timeout=1.0)
 ```
 
-### `parse_think_answer(text)`
+#### `parse_think_answer(text)`
 
 Parses a string containing Chain-of-Thought tags (`<think>...</think>` and `<answer>...</answer>`) and returns the content of both.
 
@@ -310,7 +316,7 @@ print(f"Reasoning: {think}")
 print(f"Result: {answer}")
 ```
 
-### `extract_within_tags(content, start_tag='<answer>', end_tag='</answer>', default_return=None)`
+#### `extract_within_tags(content, start_tag='<answer>', end_tag='</answer>', default_return=None)`
 
 Extracts the substring found between two specific tags.
 
@@ -321,7 +327,7 @@ text = "Result: <json>{...}</json>"
 json_str = extract_within_tags(text, "<json>", "</json>")
 ```
 
-### `get_all_file_paths(directory, suffix='')`
+#### `get_all_file_paths(directory, suffix='')`
 
 Recursively retrieves all file paths in a directory that match a given suffix.
 
@@ -333,7 +339,7 @@ py_files = get_all_file_paths(".", suffix=".py")
 print(py_files)
 ```
 
-### `remove_tag(s, tags=["<think>", "</think>", "<answer>", "</answer>"], r="\n")`
+#### `remove_tag(s, tags=["<think>", "</think>", "<answer>", "</answer>"], r="\n")`
 
 Removes specified tags from a string, replacing them with a separator (default newline).
 
