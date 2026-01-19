@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "structai"
+version = "0.1.0"
+authors = [
+  { name="Wanghan Xu", email="xu_wanghan@sjtu.edu.cn" },
+]
+description = "A utility package for AI development"
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "openai",
+    "Levenshtein",
+    "json_repair",
+    "Pillow",
+    "httpx",
+    "pandas",
+    "numpy",
+    "tqdm",
+    "fastapi",
+    "uvicorn",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/black-yt/structai"
