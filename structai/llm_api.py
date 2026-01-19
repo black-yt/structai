@@ -52,18 +52,22 @@ def sanitize_text(text: str) -> str:
 
 def filter_excessive_repeats(text, threshold=5):
     """
-    Identifies sequences where a single character repeats more than the specified threshold
-    and removes them entirely from the string.
+    Identifies sequences where a single character or a two-character substring repeats 
+    at least the specified threshold times and removes them entirely from the string.
     
     Args:
         text (str): The input string to be processed.
-        threshold (int): The maximum allowed consecutive repetitions (exclusive).
+        threshold (int): The minimum number of consecutive repetitions to trigger removal.
         
     Returns:
         str: The processed string with excessive repetitions removed.
     """
-    pattern = r'(.)\1{' + str(threshold) + r',}'
-    return re.sub(pattern, '', text)
+    pattern1 = r'(.)\1{' + str(threshold - 1) + r',}'
+    text = re.sub(pattern1, '', text)
+    
+    pattern2 = r'(.{2})\1{' + str(threshold - 1) + r',}'
+    text = re.sub(pattern2, '', text)
+    return text
 
 
 def str2dict(s: str) -> dict:

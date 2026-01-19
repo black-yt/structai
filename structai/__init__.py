@@ -232,7 +232,7 @@ print(clean) # 'Hello [31mWorld[0m!'
 
 ### `filter_excessive_repeats`
 
-Identifies sequences where a single character repeats more than the specified threshold and removes them entirely from the string.
+Identifies sequences where a single character or a two-character substring repeats at least the specified threshold times and removes them entirely from the string.
 
 *   **Args**:
     *   `text` (str): The input string.
@@ -246,6 +246,9 @@ from structai import filter_excessive_repeats
 
 clean = filter_excessive_repeats("Helloooooo World", threshold=5)
 print(clean) # "Hell World"
+
+clean = filter_excessive_repeats("Hello\\b\\b World", threshold=2)
+print(clean) # "Heo World"
 ```
 
 ### `str2dict`
@@ -552,7 +555,8 @@ from structai import get_all_file_paths
 # Get all Python files in the current directory
 py_files = get_all_file_paths(".", suffix=".py")
 print(py_files)
-```"""
+```
+"""
 
 __all__ = [
     "structai_skill",
