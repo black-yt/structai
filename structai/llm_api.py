@@ -5,6 +5,7 @@ import time
 from json_repair import repair_json
 from PIL import Image
 import io
+import re
 import base64
 import os
 import string
@@ -22,21 +23,47 @@ _ALLOWED_CHARS = set(
     + "\n\t"
 )
 
+_ESCAPED_CTRL_RE = re.compile(
+    r"""
+    \\(
+        [btnrfv]            |   # \b \t \n \r \f \v
+        x[0-9a-fA-F]{2}     |   # \x08 \x1b
+        u[0-9a-fA-F]{4}     |   # \u0008
+        U[0-9a-fA-F]{8}     |   # \U00000008
+        x1b\[[0-9;]*[A-Za-z]    # ANSI escaped
+    )
+    """,
+    re.VERBOSE,
+)
+
 def sanitize_text(text: str) -> str:
     """
     Sanitize subprocess / tqdm / CLI output for:
     - JSON serialization
     - LLM input
     - Human-readable logs
-
-    Strategy:
-    - Whitelist ASCII English characters only
-    - Remove all control chars, ANSI effects, unicode noise
     """
     if not text:
         return text
+    
+    text = _ESCAPED_CTRL_RE.sub("", text)
 
     return "".join(ch for ch in text if ch in _ALLOWED_CHARS)
+
+def filter_excessive_repeats(text, threshold=5):
+    """
+    Identifies sequences where a single character repeats more than the specified threshold
+    and removes them entirely from the string.
+    
+    Args:
+        text (str): The input string to be processed.
+        threshold (int): The maximum allowed consecutive repetitions (exclusive).
+        
+    Returns:
+        str: The processed string with excessive repetitions removed.
+    """
+    pattern = r'(.)\1{' + str(threshold) + r',}'
+    return re.sub(pattern, '', text)
 
 
 def str2dict(s: str) -> dict:
