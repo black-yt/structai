@@ -4,6 +4,13 @@ StructAI is a comprehensive utility package for AI development, offering a robus
 
 ## Installation
 
+> **Recommended for most users.** Installs the latest stable release from PyPI.
+```bash
+pip install structai
+```
+
+> **For development.** Installs StructAI in editable mode from source, enabling live code changes.
+
 ```bash
 git clone https://github.com/black-yt/structai.git
 cd structai
