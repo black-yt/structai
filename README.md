@@ -111,9 +111,9 @@ agent = LLMAgent(
 **Basic Usage (`__call__` or `safe_api`):**
 
 ```python
-response = agent("What is the capital of France?")
+response = agent("Generate a random number.", n=3, temperature=1)
 print(response)
-# Output: "Paris"
+# Output: ["Sure! Here's a random number for you: 738", "Sure! Here's a random number: 7382", "Sure! Here's a random number: 487."]
 ```
 
 **Structured Output Validation:**
@@ -123,7 +123,7 @@ You can enforce the output format (List, Dict, or specific types) using `return_
 ```python
 # Enforce a list of integers
 numbers = agent(
-    "Generate 3 random numbers", 
+    "Generate 3 random numbers, for example, [1, 2, 3].", 
     return_example=[1], 
     list_len=3
 )
@@ -131,7 +131,7 @@ numbers = agent(
 
 # Enforce a dictionary with specific keys
 profile = agent(
-    "Create a user profile for Alice", 
+    "Create a user profile for Alice, for example, {'name': Alice, 'age': 1, 'city': 'shanghai'}.", 
     return_example={"name": "str", "age": 1, "city": "str"}
 )
 # Output: {'name': 'Alice', 'age': 25, 'city': 'New York'}
@@ -144,6 +144,19 @@ profile = agent(
 description = agent(
     "Describe this image", 
     image_paths=["image.jpg"]
+)
+```
+
+**Memory Context:**
+
+```python
+history = [
+    {"role": "user", "content": "My name is Bob."},
+    {"role": "assistant", "content": "Hello Bob."}
+]
+answer = agent(
+    "What is my name?", 
+    history=history, 
 )
 ```
 
@@ -351,4 +364,4 @@ clean_text = remove_tag("<think>...</think> Answer")
 
 ## License
 
-MIT License
+[MIT License](LICENSE)
