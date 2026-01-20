@@ -322,15 +322,15 @@ class LLMAgent:
                     }
                 })
         
-        if history is None:
+        if isinstance(history, list) and len(history) > 0:
+            messages=[{"role": "system", "content": system_prompt}]+\
+                history+\
+                [{"role": "user", "content": content}]
+        else:
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": content}
             ]
-        else:
-            messages=[{"role": "system", "content": system_prompt}]+\
-                history+\
-                [{"role": "user", "content": content}]
         
         use_responses_api = kwargs.get('use_responses_api', self.use_responses_api)
         if use_responses_api:
