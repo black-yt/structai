@@ -28,6 +28,40 @@ export LLM_BASE_URL="your-api-base-url"
 
 ## StructAI Library Documentation
 
+- [Skill](#skill)
+  - [`structai_skill`](#structai_skill)
+- [LLMs/vLLMs](#llmsvllms)
+  - [`LLMAgent Class`](#llmagent-class)
+    - [`initialization`](#initialization)
+    - [`__call__`](#__call__)
+  - [`messages_to_responses_input`](#messages_to_responses_input)
+  - [`extract_text_outputs`](#extract_text_outputs)
+- [Concurrent](#concurrent)
+  - [`multi_thread`](#multi_thread)
+  - [`multi_process`](#multi_process)
+- [I/O](#io)
+  - [`load_file`](#load_file)
+  - [`save_file`](#save_file)
+  - [`read_image`](#read_image)
+  - [`encode_image`](#encode_image)
+  - [`get_all_file_paths`](#get_all_file_paths)
+  - [`print_once`](#print_once)
+  - [`make_print_once`](#make_print_once)
+- [String Processing](#string-processing)
+  - [`sanitize_text`](#sanitize_text)
+  - [`filter_excessive_repeats`](#filter_excessive_repeats)
+  - [`str2dict`](#str2dict)
+  - [`str2list`](#str2list)
+  - [`remove_tag`](#remove_tag)
+  - [`parse_think_answer`](#parse_think_answer)
+  - [`extract_within_tags`](#extract_within_tags)
+- [Network Service](#network-service)
+  - [`add_no_proxy_if_private`](#add_no_proxy_if_private)
+  - [`run_server`](#run_server)
+- [Time Limit](#time-limit)
+  - [`timeout_limit`](#timeout_limit)
+  - [`run_with_timeout`](#run_with_timeout)
+
 ### Skill
 
 #### `structai_skill`
