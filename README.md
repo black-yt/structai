@@ -1,6 +1,6 @@
 # StructAI
 
-StructAI is a comprehensive utility library designed to accelerate AI engineering and LLM application development. It empowers developers with a robust toolkit for reliable LLM interactions (including structured outputs and retries), high-performance parallel processing, intelligent file I/O, and advanced string manipulation—simplifying workflows to build scalable, production-ready AI systems.
+StructAI is a comprehensive utility library for accelerating LLM application development, including multi-agent systems. It offers a robust toolkit for LLM interaction—such as structured outputs, context management, and parallel execution—streamlining development workflows and facilitating the deployment of scalable, production-ready AI systems.
 
 ## ⚙️ Installation
 
