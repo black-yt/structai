@@ -1,8 +1,8 @@
 # StructAI
 
-StructAI is a comprehensive utility package for AI development, offering a robust set of tools for file operations, LLM interactions, parallel processing, and general programming tasks.
+StructAI is a comprehensive utility library designed to accelerate AI engineering and LLM application development. It empowers developers with a robust toolkit for reliable LLM interactions (including structured outputs and retries), high-performance parallel processing, intelligent file I/O, and advanced string manipulation—simplifying workflows to build scalable, production-ready AI systems.
 
-## Installation
+## ⚙️ Installation
 
 > **Recommended for most users.** Installs the latest stable release from PyPI.
 ```bash
@@ -26,20 +26,22 @@ export LLM_BASE_URL="your-api-base-url"
 
 ---
 
-## StructAI Library Documentation
+## 📚 StructAI Library Documentation
 
-- [Skill](#skill)
+### 📜 Table of Contents
+
+- [🌟 Skill](#skill)
   - [`structai_skill`](#structai_skill)
-- [LLMs/vLLMs](#llmsvllms)
+- [🤖 LLMs/vLLMs](#llmsvllms)
   - [`LLMAgent Class`](#llmagent-class)
     - [`initialization`](#initialization)
     - [`__call__`](#__call__)
   - [`messages_to_responses_input`](#messages_to_responses_input)
   - [`extract_text_outputs`](#extract_text_outputs)
-- [Concurrent](#concurrent)
+- [🚀 Concurrent](#concurrent)
   - [`multi_thread`](#multi_thread)
   - [`multi_process`](#multi_process)
-- [I/O](#io)
+- [📂 I/O](#io)
   - [`load_file`](#load_file)
   - [`save_file`](#save_file)
   - [`read_image`](#read_image)
@@ -47,7 +49,7 @@ export LLM_BASE_URL="your-api-base-url"
   - [`get_all_file_paths`](#get_all_file_paths)
   - [`print_once`](#print_once)
   - [`make_print_once`](#make_print_once)
-- [String Processing](#string-processing)
+- [📝 String Processing](#string-processing)
   - [`sanitize_text`](#sanitize_text)
   - [`filter_excessive_repeats`](#filter_excessive_repeats)
   - [`str2dict`](#str2dict)
@@ -55,10 +57,10 @@ export LLM_BASE_URL="your-api-base-url"
   - [`remove_tag`](#remove_tag)
   - [`parse_think_answer`](#parse_think_answer)
   - [`extract_within_tags`](#extract_within_tags)
-- [Network Service](#network-service)
+- [🌐 Network Service](#network-service)
   - [`add_no_proxy_if_private`](#add_no_proxy_if_private)
   - [`run_server`](#run_server)
-- [Time Limit](#time-limit)
+- [⏱️ Time Limit](#time-limit)
   - [`timeout_limit`](#timeout_limit)
   - [`run_with_timeout`](#run_with_timeout)
 
@@ -80,6 +82,8 @@ from structai import structai_skill
 docs = structai_skill()
 print(docs)
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ### LLMs/vLLMs
 
@@ -111,6 +115,8 @@ from structai import LLMAgent
 
 agent = LLMAgent()
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ##### `__call__`
 Sends a query to the LLM with built-in validation, parsing, and retry logic.
@@ -178,6 +184,8 @@ answer = agent(
 # Output: 'Your name is Bob.'
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `messages_to_responses_input`
 
 Converts standard Chat Completions `messages` format (list of dicts) to the input format required by the Responses API.
@@ -194,6 +202,8 @@ from structai import messages_to_responses_input
 messages = [{"role": "user", "content": "Hello"}]
 system_prompt, input_blocks = messages_to_responses_input(messages)
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 #### `extract_text_outputs`
 
@@ -212,6 +222,8 @@ from structai import extract_text_outputs
 texts = extract_text_outputs(response)
 print(texts[0])
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ### Concurrent
 
@@ -240,6 +252,8 @@ results = multi_thread(inputs, square, max_workers=4)
 print(results) # [0, 1, 4, 9, ...]
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `multi_process`
 
 Executes a function concurrently for each item in `inp_list` using a process pool. Ideal for CPU-bound tasks.
@@ -263,6 +277,8 @@ def heavy_computation(n):
 inputs = [{"n": 1000} for _ in range(5)]
 results = multi_process(inputs, heavy_computation)
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ### I/O
 
@@ -296,6 +312,8 @@ df = load_file("data.csv")
 image = load_file("photo.jpg")
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `save_file`
 Automatically saves data to a file based on the extension. Creates necessary directories if they don't exist.
 
@@ -318,6 +336,8 @@ save_file(data, "output.json")
 save_file(data, "backup.pkl")
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `read_image`
 
 Reads an image from a path and returns a PIL Image object.
@@ -334,6 +354,8 @@ from structai import read_image
 img = read_image("photo.jpg")
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `encode_image`
 
 Encodes a PIL Image object into a base64 string.
@@ -349,6 +371,8 @@ from structai import encode_image
 
 b64_str = encode_image(img)
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 #### `get_all_file_paths`
 
@@ -369,6 +393,8 @@ py_files = get_all_file_paths(".", suffix=".py")
 print(py_files)
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `print_once`
 Prints a message to stdout only once during the entire program execution. Useful for logging warnings or info inside loops.
 
@@ -384,6 +410,8 @@ from structai import print_once
 for i in range(10):
     print_once("Starting processing...") # print only once
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 #### `make_print_once`
 Creates and returns a local function that prints a message only once. This is useful if you need a "print once" behavior scoped to a specific function or instance rather than globally.
@@ -407,6 +435,8 @@ logger2("World") # Prints "World"
 logger2("World") # Does nothing
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 ### String Processing
 
 #### `sanitize_text`
@@ -425,6 +455,8 @@ from structai import sanitize_text
 clean = sanitize_text("Hello \x1b[31mWorld\x1b[0m!")
 print(clean) # 'Hello [31mWorld[0m!'
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 #### `filter_excessive_repeats`
 
@@ -447,6 +479,8 @@ clean = filter_excessive_repeats("Hello\\b\\b World", threshold=2)
 print(clean) # "Heo World"
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `str2dict`
 
 Robustly converts a string representation of a dictionary to a Python `dict`. It handles common formatting errors and uses `json_repair` as a fallback.
@@ -464,6 +498,8 @@ d = str2dict("{'a': 1, 'b': 2}")
 print(d['a']) # 1
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `str2list`
 
 Robustly converts a string representation of a list to a Python `list`.
@@ -480,6 +516,8 @@ from structai import str2list
 l = str2list("[1, 2, 3]")
 print(len(l)) # 3
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 #### `remove_tag`
 
@@ -500,6 +538,8 @@ clean_text = remove_tag("<think>...</think> Answer")
 # Output: "...\n Answer"
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `parse_think_answer`
 
 Parses a string containing Chain-of-Thought tags (`<think>...</think>` and `<answer>...</answer>`) and returns the content of both.
@@ -518,6 +558,8 @@ think, answer = parse_think_answer(raw_text)
 print(f"Reasoning: {think}") # Reasoning: Step 1...
 print(f"Result: {answer}") # Result: 42
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 #### `extract_within_tags`
 
@@ -540,6 +582,8 @@ json_str = extract_within_tags(text, "<json>", "</json>")
 # Output: "{...}"
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 ### Network Service
 
 #### `add_no_proxy_if_private`
@@ -558,6 +602,8 @@ from structai import add_no_proxy_if_private
 add_no_proxy_if_private("http://192.168.1.100:8080/v1")
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `run_server`
 
 Starts a FastAPI server that acts as a proxy to an OpenAI-compatible LLM provider using LLM_BASE_URL and LLM_API_KEY in environment variables.
@@ -575,6 +621,8 @@ from structai import run_server
 if __name__ == "__main__":
     run_server()
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ### Time Limit
 
@@ -600,6 +648,8 @@ def task():
 task()
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 #### `run_with_timeout`
 
 Runs a function with a specified timeout without using a decorator.
@@ -621,3 +671,5 @@ def task(x):
 
 result = run_with_timeout(task, args=(10,), timeout=1.0)
 ```
+
+[Back to Table of Contents](#table-of-contents)
