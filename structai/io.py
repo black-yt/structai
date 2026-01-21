@@ -11,23 +11,23 @@ def load_file(path):
     ext = os.path.splitext(path)[1].lower()
 
     if ext == ".json":
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
             return json.load(f)
 
     elif ext == ".jsonl":
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
             return [json.loads(line) for line in f]
 
     elif ext == ".csv":
         import pandas as pd
-        return pd.read_csv(path)
+        return pd.read_csv(path, encoding="utf-8", encoding_errors="replace")
 
     elif ext == ".txt":
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
             return f.read()
 
     elif ext == ".md":
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
             return f.read()
 
     elif ext == ".pkl":
@@ -43,7 +43,7 @@ def load_file(path):
         return pd.read_excel(path)
 
     elif ext == ".py":
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
             return f.read()
 
     elif ext == ".npy":
@@ -74,12 +74,12 @@ def save_file(data, path):
 
     # JSON
     if ext == ".json":
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", errors="replace") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
     # JSON Lines
     elif ext == ".jsonl":
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", errors="replace") as f:
             for item in data:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
@@ -87,18 +87,18 @@ def save_file(data, path):
     elif ext == ".csv":
         import pandas as pd
         if isinstance(data, pd.DataFrame):
-            data.to_csv(path, index=False)
+            data.to_csv(path, index=False, encoding="utf-8", errors="replace")
         else:
             raise ValueError("Saving CSV requires a pandas DataFrame.")
 
     # TXT
     elif ext == ".txt":
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", errors="replace") as f:
             f.write(str(data))
 
     # Markdown
     elif ext == ".md":
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", errors="replace") as f:
             f.write(str(data))
 
     # Pickle
@@ -124,7 +124,7 @@ def save_file(data, path):
 
     # Python script
     elif ext == ".py":
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", errors="replace") as f:
             f.write(str(data))
 
     # Numpy array
