@@ -44,7 +44,6 @@ export LLM_BASE_URL="your-api-base-url"
 - [📂 I/O](#io)
   - [`load_file`](#load_file)
   - [`save_file`](#save_file)
-  - [`read_image`](#read_image)
   - [`encode_image`](#encode_image)
   - [`get_all_file_paths`](#get_all_file_paths)
   - [`print_once`](#print_once)
@@ -52,6 +51,7 @@ export LLM_BASE_URL="your-api-base-url"
 - [📝 String Processing](#string-processing)
   - [`sanitize_text`](#sanitize_text)
   - [`filter_excessive_repeats`](#filter_excessive_repeats)
+  - [`cutoff_text`](#cutoff_text)
   - [`str2dict`](#str2dict)
   - [`str2list`](#str2list)
   - [`remove_tag`](#remove_tag)
@@ -338,24 +338,6 @@ save_file(data, "backup.pkl")
 
 [Back to Table of Contents](#table-of-contents)
 
-#### `read_image`
-
-Reads an image from a path and returns a PIL Image object.
-
-*   **Args**:
-    *   `image_path` (str): The path to the image file.
-*   **Returns**:
-    *   (PIL.Image.Image): The loaded image object.
-
-*   **Example**:
-```python
-from structai import read_image
-
-img = read_image("photo.jpg")
-```
-
-[Back to Table of Contents](#table-of-contents)
-
 #### `encode_image`
 
 Encodes a PIL Image object into a base64 string.
@@ -477,6 +459,33 @@ print(clean) # "Hell World"
 
 clean = filter_excessive_repeats("Hello\\b\\b World", threshold=2)
 print(clean) # "Heo World"
+```
+
+[Back to Table of Contents](#table-of-contents)
+
+#### `cutoff_text`
+
+Truncate and sanitize a string so that its final length is guaranteed to be <= l. The function applies a series of progressively stronger transformations:
+1. Sanitize text with `sanitize_text`.
+2. Reduce repetitions with `filter_excessive_repeats`.
+3. If still too long, keep a head and tail segment and insert a separator in the middle.
+4. Apply a final hard cutoff as a safety net.
+
+*   **Args**:
+    *   `s` (str): Input string to be processed. May contain invalid Unicode, excessive repetition, or arbitrarily long content.
+    *   `l` (int): Maximum allowed length of the returned string. Must be greater than `9`. Defaults to `20_000`.
+*   **Returns**:
+    *   (str): A processed string whose length is guaranteed to be less than or equal to `l`.
+
+*   **Example**:
+```python
+from structai import cutoff_text
+
+s = cutoff_text("aaaaaaasdddddfdf", l=10)
+print(s) # "sfdf"
+
+s = cutoff_text("asdfjsdjgofgofdkmsdlfmldmsgkgnfkdsfagfsdafdsfskfn", 22)
+print(s) # "asdfjsd\n\n...\n\ndsfskfn"
 ```
 
 [Back to Table of Contents](#table-of-contents)

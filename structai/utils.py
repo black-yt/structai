@@ -1,6 +1,8 @@
 from functools import wraps
 import threading
 import os
+import re
+import string
 
 
 def run_with_timeout(func, args=(), kwargs=None, timeout=None):
@@ -148,6 +150,96 @@ def get_all_file_paths(directory, suffix=''):
     return file_paths
 
 
+_ALLOWED_CHARS = set(
+    string.ascii_letters
+    + string.digits
+    + " .,:;!?+-*/=<>|@#$%&()[]{}_'\""
+    + "\n\t"
+)
+
+_ESCAPED_CTRL_RE = re.compile(
+    r"""
+    \\(
+        [btnrfv]            |   # \b \t \n \r \f \v
+        x[0-9a-fA-F]{2}     |   # \x08 \x1b
+        u[0-9a-fA-F]{4}     |   # \u0008
+        U[0-9a-fA-F]{8}     |   # \U00000008
+        x1b\[[0-9;]*[A-Za-z]    # ANSI escaped
+    )
+    """,
+    re.VERBOSE,
+)
+
+def sanitize_text(text: str) -> str:
+    """
+    Sanitize subprocess / tqdm / CLI output for:
+    - JSON serialization
+    - LLM input
+    - Human-readable logs
+    """
+    if not text:
+        return text
+    
+    text = _ESCAPED_CTRL_RE.sub("", text)
+
+    return "".join(ch for ch in text if ch in _ALLOWED_CHARS)
+
+
+def filter_excessive_repeats(text, threshold=5):
+    """
+    Identifies sequences where a single character or a two-character substring repeats 
+    at least the specified threshold times and removes them entirely from the string.
+    
+    Args:
+        text (str): The input string to be processed.
+        threshold (int): The minimum number of consecutive repetitions to trigger removal.
+        
+    Returns:
+        str: The processed string with excessive repetitions removed.
+    """
+    pattern1 = r'(.)\1{' + str(threshold - 1) + r',}'
+    text = re.sub(pattern1, '', text)
+    
+    pattern2 = r'(.{2})\1{' + str(threshold - 1) + r',}'
+    text = re.sub(pattern2, '', text)
+    return text
+
+
+def cutoff_text(s: str, l: int = 20_000):
+    """
+    Truncate and sanitize a string so that its final length is guaranteed to be <= l.
+
+    The function applies a series of progressively stronger transformations:
+    1. Sanitize invalid or unsafe characters (e.g., Unicode surrogates).
+    2. Reduce excessive repetitions that may bloat the text.
+    3. If still too long, keep a head and tail segment and insert a separator in the middle.
+    4. Apply a final hard cutoff as a safety net.
+
+    Args:
+        s (str): Input string to be processed. May contain invalid Unicode, excessive repetition, or arbitrarily long content.
+        l (int): Maximum allowed length of the returned string. Must be greater than 9. Defaults to 20_000.
+
+    Returns:
+        str: A processed string whose length is guaranteed to be less than or equal to `l`.
+    """
+
+    sep = "\n\n...\n\n"
+    sep_len = len(sep)
+
+    assert l > sep_len + 2, "l is too small to safely cut text"
+
+    if len(s) > l:
+        s = sanitize_text(s)
+    if len(s) > l:
+        s = filter_excessive_repeats(s)
+    if len(s) > l:
+        side_len = (l - sep_len) // 2
+        s = s[:side_len] + sep + s[-side_len:]
+    if len(s) > l:
+        s = s[:l]
+    return s
+
+
 if __name__ == "__main__":
     # python -m structai.utils
     print("Testing utils.py...")
@@ -205,5 +297,26 @@ if __name__ == "__main__":
     extracted = extract_within_tags(text, "<tag>", "</tag>")
     assert extracted == "content", f"[===ERROR===][structai][utils.py][main] extract_within_tags failed: {extracted} != content"
     print("extract_within_tags passed")
+
+    # Test sanitize_text
+    print("Testing sanitize_text...")
+    assert sanitize_text("Hello World!") == "Hello World!", f"[===ERROR===][structai][utils.py][main] sanitize_text failed"
+    assert sanitize_text("Hello\nWorld") == "Hello\nWorld", f"[===ERROR===][structai][utils.py][main] sanitize_text failed"
+    assert sanitize_text("Hello 🌍") == "Hello ", f"[===ERROR===][structai][utils.py][main] sanitize_text failed"
+    print("sanitize_text passed")
+
+    # Test filter_excessive_repeats
+    print("Testing filter_excessive_repeats...")
+    assert filter_excessive_repeats("Helloooooo World", threshold=5) == "Hell World", f"[===ERROR===][structai][utils.py][main] filter_excessive_repeats failed"
+    assert filter_excessive_repeats("Hello\\b\\b World", threshold=2) == "Heo World", f"[===ERROR===][structai][utils.py][main] filter_excessive_repeats failed"
+    print("filter_excessive_repeats passed")
+
+    # Test cutoff_text
+    print("Testing cutoff_text...")
+    assert cutoff_text("aaasdddddfdf", 100) == "aaasdddddfdf", f"[===ERROR===][structai][utils.py][main] cutoff_text failed"
+    assert cutoff_text("aaaaaaasdddddfdf", 10) == "sfdf", f"[===ERROR===][structai][utils.py][main] cutoff_text failed"
+    assert cutoff_text("asdfjsdjgofgofdkmsdlfmldmsgkgnfkdsfagfsdafdsfskfn", 22) == 'asdfjsd\n\n...\n\ndsfskfn', f"[===ERROR===][structai][utils.py][main] cutoff_text failed"
+    assert len(cutoff_text("asdfjsdjgofgofdkmsdlfmldmsgkgnfkdsfagfsdafdsfskfn", 23)) == 23, f"[===ERROR===][structai][utils.py][main] cutoff_text failed"
+    print("cutoff_text passed")
     
     print("utils.py tests completed.")

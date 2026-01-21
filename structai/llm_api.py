@@ -5,69 +5,16 @@ import time
 from json_repair import repair_json
 from PIL import Image
 import io
-import re
 import base64
 import os
-import string
 import ipaddress
 import ast
 import json
 from urllib.parse import urlparse
-from .utils import run_with_timeout
+from .io import load_file
+from .utils import run_with_timeout, sanitize_text
 from .mp import multi_thread
 
-_ALLOWED_CHARS = set(
-    string.ascii_letters
-    + string.digits
-    + " .,:;!?+-*/=<>|@#$%&()[]{}_'\""
-    + "\n\t"
-)
-
-_ESCAPED_CTRL_RE = re.compile(
-    r"""
-    \\(
-        [btnrfv]            |   # \b \t \n \r \f \v
-        x[0-9a-fA-F]{2}     |   # \x08 \x1b
-        u[0-9a-fA-F]{4}     |   # \u0008
-        U[0-9a-fA-F]{8}     |   # \U00000008
-        x1b\[[0-9;]*[A-Za-z]    # ANSI escaped
-    )
-    """,
-    re.VERBOSE,
-)
-
-def sanitize_text(text: str) -> str:
-    """
-    Sanitize subprocess / tqdm / CLI output for:
-    - JSON serialization
-    - LLM input
-    - Human-readable logs
-    """
-    if not text:
-        return text
-    
-    text = _ESCAPED_CTRL_RE.sub("", text)
-
-    return "".join(ch for ch in text if ch in _ALLOWED_CHARS)
-
-def filter_excessive_repeats(text, threshold=5):
-    """
-    Identifies sequences where a single character or a two-character substring repeats 
-    at least the specified threshold times and removes them entirely from the string.
-    
-    Args:
-        text (str): The input string to be processed.
-        threshold (int): The minimum number of consecutive repetitions to trigger removal.
-        
-    Returns:
-        str: The processed string with excessive repetitions removed.
-    """
-    pattern1 = r'(.)\1{' + str(threshold - 1) + r',}'
-    text = re.sub(pattern1, '', text)
-    
-    pattern2 = r'(.{2})\1{' + str(threshold - 1) + r',}'
-    text = re.sub(pattern2, '', text)
-    return text
 
 
 def str2dict(s: str) -> dict:
@@ -98,10 +45,6 @@ def str2list(s: str) -> list:
         except:
             l = json.loads(repair_json(sanitize_text(s)))
     return l
-
-
-def read_image(image_path: str) -> Image.Image:
-    return Image.open(image_path)
 
 
 def encode_image(image_obj: Image.Image) -> str:
@@ -310,7 +253,7 @@ class LLMAgent:
 
             for image_path in image_paths:
                 try:
-                    img = read_image(image_path)
+                    img = load_file(image_path)
                     ima_str = encode_image(img)
                 except:
                     continue
@@ -477,13 +420,6 @@ class LLMAgent:
 if __name__ == '__main__':
     # python -m structai.llm_api
     print("Testing llm_api.py...")
-    
-    # Test sanitize_text
-    print("Testing sanitize_text...")
-    assert sanitize_text("Hello World!") == "Hello World!", f"[===ERROR===][structai][llm_api.py][main] sanitize_text failed"
-    assert sanitize_text("Hello\nWorld") == "Hello\nWorld", f"[===ERROR===][structai][llm_api.py][main] sanitize_text failed"
-    assert sanitize_text("Hello 🌍") == "Hello ", f"[===ERROR===][structai][llm_api.py][main] sanitize_text failed"
-    print("sanitize_text passed")
 
     # Test str2dict
     print("Testing str2dict...")
