@@ -28,7 +28,9 @@ export LLM_BASE_URL="your-api-base-url"
 
 ## StructAI Library Documentation
 
-### `structai_skill`
+### Skill
+
+#### `structai_skill`
 
 Returns a comprehensive documentation string for the StructAI library in Markdown format. This is useful for providing context to LLMs about the available tools in this library.
 
@@ -45,102 +47,13 @@ docs = structai_skill()
 print(docs)
 ```
 
+### LLMs/vLLMs
 
-### `load_file`
-Automatically reads a file based on its extension.
-
-*   **Args**:
-    *   `path` (str): The path to the file to be read.
-*   **Returns**:
-    *   (Any): The content of the file, parsed into an appropriate Python object.
-        *   `.json` -> `dict` or `list`
-        *   `.jsonl` -> `list` of dicts
-        *   `.csv`, `.parquet`, `.xlsx` -> `pandas.DataFrame`
-        *   `.txt`, `.md`, `.py` -> `str`
-        *   `.pkl` -> unpickled object
-        *   `.npy` -> `numpy.ndarray`
-        *   `.pt` -> `torch` object
-        *   `.png`, `.jpg`, `.jpeg` -> `PIL.Image.Image`
-
-*   **Example**:
-```python
-from structai import load_file
-
-# Load a JSON file
-data = load_file("config.json")
-
-# Load a CSV file as a pandas DataFrame
-df = load_file("data.csv")
-
-# Load an image
-image = load_file("photo.jpg")
-```
-
-### `save_file`
-Automatically saves data to a file based on the extension. Creates necessary directories if they don't exist.
-
-*   **Args**:
-    *   `data` (Any): The data object to save.
-    *   `path` (str): The destination file path.
-*   **Returns**:
-    *   None
-
-*   **Example**:
-```python
-from structai import save_file
-
-data = {"key": "value"}
-
-# Save as JSON
-save_file(data, "output.json")
-
-# Save as Pickle
-save_file(data, "backup.pkl")
-```
-
-### `print_once`
-Prints a message to stdout only once during the entire program execution. Useful for logging warnings or info inside loops.
-
-*   **Args**:
-    *   `msg` (str): The message to print.
-*   **Returns**:
-    *   None
-
-*   **Example**:
-```python
-from structai import print_once
-
-for i in range(10):
-    print_once("Starting processing...") # print only once
-```
-
-### `make_print_once`
-Creates and returns a local function that prints a message only once. This is useful if you need a "print once" behavior scoped to a specific function or instance rather than globally.
-
-*   **Args**:
-    *   None
-*   **Returns**:
-    *   (callable): A function `inner(msg)` that behaves like `print_once`.
-
-*   **Example**:
-```python
-from structai import make_print_once
-
-logger1 = make_print_once()
-logger2 = make_print_once()
-
-logger1("Hello") # Prints "Hello"
-logger1("Hello") # Does nothing
-
-logger2("World") # Prints "World"
-logger2("World") # Does nothing
-```
-
-### `LLMAgent` Class
+#### `LLMAgent` Class
 
 A powerful wrapper class for interacting with OpenAI-compatible LLM APIs. It handles retries, timeouts, and structured output validation.
 
-#### `initialization`
+##### `initialization`
 
 *   **Args**:
     *   `api_key` (str, optional): API Key. Defaults to `os.environ["LLM_API_KEY"]`.
@@ -165,9 +78,8 @@ from structai import LLMAgent
 agent = LLMAgent()
 ```
 
-#### `__call__`
+##### `__call__`
 Sends a query to the LLM with built-in validation, parsing, and retry logic.
-
 
 *   **Args**:
     *   `query` (str): The main input text or prompt to be sent to the LLM.
@@ -232,127 +144,7 @@ answer = agent(
 # Output: 'Your name is Bob.'
 ```
 
-### `sanitize_text`
-
-Sanitizes text by keeping only ASCII English characters, digits, and common punctuation. Removes control characters and ANSI codes.
-
-*   **Args**:
-    *   `text` (str): The text to sanitize.
-*   **Returns**:
-    *   (str): The sanitized text.
-
-*   **Example**:
-```python
-from structai import sanitize_text
-
-clean = sanitize_text("Hello \x1b[31mWorld\x1b[0m!")
-print(clean) # 'Hello [31mWorld[0m!'
-```
-
-### `filter_excessive_repeats`
-
-Identifies sequences where a single character or a two-character substring repeats at least the specified threshold times and removes them entirely from the string.
-
-*   **Args**:
-    *   `text` (str): The input string.
-    *   `threshold` (int, optional): The maximum allowed consecutive repetitions. Default `5`.
-*   **Returns**:
-    *   (str): The processed string with excessive repetitions removed.
-
-*   **Example**:
-```python
-from structai import filter_excessive_repeats
-
-clean = filter_excessive_repeats("Helloooooo World", threshold=5)
-print(clean) # "Hell World"
-
-clean = filter_excessive_repeats("Hello\\b\\b World", threshold=2)
-print(clean) # "Heo World"
-```
-
-### `str2dict`
-
-Robustly converts a string representation of a dictionary to a Python `dict`. It handles common formatting errors and uses `json_repair` as a fallback.
-
-*   **Args**:
-    *   `s` (str): The string representation of a dictionary.
-*   **Returns**:
-    *   (dict): The parsed dictionary.
-
-*   **Example**:
-```python
-from structai import str2dict
-
-d = str2dict("{'a': 1, 'b': 2}")
-print(d['a']) # 1
-```
-
-### `str2list`
-
-Robustly converts a string representation of a list to a Python `list`.
-
-*   **Args**:
-    *   `s` (str): The string representation of a list.
-*   **Returns**:
-    *   (list): The parsed list.
-
-*   **Example**:
-```python
-from structai import str2list
-
-l = str2list("[1, 2, 3]")
-print(len(l)) # 3
-```
-
-### `add_no_proxy_if_private`
-
-Checks if the hostname in the URL is a private IP address. If so, it adds it to the `no_proxy` environment variable to bypass proxies.
-
-*   **Args**:
-    *   `url` (str): The URL to check.
-*   **Returns**:
-    *   None
-
-*   **Example**:
-```python
-from structai import add_no_proxy_if_private
-
-add_no_proxy_if_private("http://192.168.1.100:8080/v1")
-```
-
-### `read_image`
-
-Reads an image from a path and returns a PIL Image object.
-
-*   **Args**:
-    *   `image_path` (str): The path to the image file.
-*   **Returns**:
-    *   (PIL.Image.Image): The loaded image object.
-
-*   **Example**:
-```python
-from structai import read_image
-
-img = read_image("photo.jpg")
-```
-
-### `encode_image`
-
-Encodes a PIL Image object into a base64 string.
-
-*   **Args**:
-    *   `image_obj` (PIL.Image.Image): The image object to encode.
-*   **Returns**:
-    *   (str): The base64 encoded string.
-
-*   **Example**:
-```python
-from structai import encode_image
-
-b64_str = encode_image(img)
-```
-
-### `messages_to_responses_input`
+#### `messages_to_responses_input`
 
 Converts standard Chat Completions `messages` format (list of dicts) to the input format required by the Responses API.
 
@@ -369,7 +161,7 @@ messages = [{"role": "user", "content": "Hello"}]
 system_prompt, input_blocks = messages_to_responses_input(messages)
 ```
 
-### `extract_text_outputs`
+#### `extract_text_outputs`
 
 Extracts the text content from an LLM API response object (supports both Chat Completions and Responses API formats).
 
@@ -387,7 +179,9 @@ texts = extract_text_outputs(response)
 print(texts[0])
 ```
 
-### `multi_thread`
+### Concurrent
+
+#### `multi_thread`
 
 Executes a function concurrently for each item in `inp_list` using a thread pool.
 
@@ -412,7 +206,7 @@ results = multi_thread(inputs, square, max_workers=4)
 print(results) # [0, 1, 4, 9, ...]
 ```
 
-### `multi_process`
+#### `multi_process`
 
 Executes a function concurrently for each item in `inp_list` using a process pool. Ideal for CPU-bound tasks.
 
@@ -436,7 +230,301 @@ inputs = [{"n": 1000} for _ in range(5)]
 results = multi_process(inputs, heavy_computation)
 ```
 
-### `run_server`
+### I/O
+
+#### `load_file`
+Automatically reads a file based on its extension.
+
+*   **Args**:
+    *   `path` (str): The path to the file to be read.
+*   **Returns**:
+    *   (Any): The content of the file, parsed into an appropriate Python object.
+        *   `.json` -> `dict` or `list`
+        *   `.jsonl` -> `list` of dicts
+        *   `.csv`, `.parquet`, `.xlsx` -> `pandas.DataFrame`
+        *   `.txt`, `.md`, `.py` -> `str`
+        *   `.pkl` -> unpickled object
+        *   `.npy` -> `numpy.ndarray`
+        *   `.pt` -> `torch` object
+        *   `.png`, `.jpg`, `.jpeg` -> `PIL.Image.Image`
+
+*   **Example**:
+```python
+from structai import load_file
+
+# Load a JSON file
+data = load_file("config.json")
+
+# Load a CSV file as a pandas DataFrame
+df = load_file("data.csv")
+
+# Load an image
+image = load_file("photo.jpg")
+```
+
+#### `save_file`
+Automatically saves data to a file based on the extension. Creates necessary directories if they don't exist.
+
+*   **Args**:
+    *   `data` (Any): The data object to save.
+    *   `path` (str): The destination file path.
+*   **Returns**:
+    *   None
+
+*   **Example**:
+```python
+from structai import save_file
+
+data = {"key": "value"}
+
+# Save as JSON
+save_file(data, "output.json")
+
+# Save as Pickle
+save_file(data, "backup.pkl")
+```
+
+#### `read_image`
+
+Reads an image from a path and returns a PIL Image object.
+
+*   **Args**:
+    *   `image_path` (str): The path to the image file.
+*   **Returns**:
+    *   (PIL.Image.Image): The loaded image object.
+
+*   **Example**:
+```python
+from structai import read_image
+
+img = read_image("photo.jpg")
+```
+
+#### `encode_image`
+
+Encodes a PIL Image object into a base64 string.
+
+*   **Args**:
+    *   `image_obj` (PIL.Image.Image): The image object to encode.
+*   **Returns**:
+    *   (str): The base64 encoded string.
+
+*   **Example**:
+```python
+from structai import encode_image
+
+b64_str = encode_image(img)
+```
+
+#### `get_all_file_paths`
+
+Recursively retrieves all file paths in a directory that match a given suffix.
+
+*   **Args**:
+    *   `directory` (str): The root directory to search.
+    *   `suffix` (str, optional): The file suffix to filter by (e.g., '.py'). Default `''` (matches all files).
+*   **Returns**:
+    *   (list[str]): A list of matching file paths.
+
+*   **Example**:
+```python
+from structai import get_all_file_paths
+
+# Get all Python files in the current directory
+py_files = get_all_file_paths(".", suffix=".py")
+print(py_files)
+```
+
+#### `print_once`
+Prints a message to stdout only once during the entire program execution. Useful for logging warnings or info inside loops.
+
+*   **Args**:
+    *   `msg` (str): The message to print.
+*   **Returns**:
+    *   None
+
+*   **Example**:
+```python
+from structai import print_once
+
+for i in range(10):
+    print_once("Starting processing...") # print only once
+```
+
+#### `make_print_once`
+Creates and returns a local function that prints a message only once. This is useful if you need a "print once" behavior scoped to a specific function or instance rather than globally.
+
+*   **Args**:
+    *   None
+*   **Returns**:
+    *   (callable): A function `inner(msg)` that behaves like `print_once`.
+
+*   **Example**:
+```python
+from structai import make_print_once
+
+logger1 = make_print_once()
+logger2 = make_print_once()
+
+logger1("Hello") # Prints "Hello"
+logger1("Hello") # Does nothing
+
+logger2("World") # Prints "World"
+logger2("World") # Does nothing
+```
+
+### String Processing
+
+#### `sanitize_text`
+
+Sanitizes text by keeping only ASCII English characters, digits, and common punctuation. Removes control characters and ANSI codes.
+
+*   **Args**:
+    *   `text` (str): The text to sanitize.
+*   **Returns**:
+    *   (str): The sanitized text.
+
+*   **Example**:
+```python
+from structai import sanitize_text
+
+clean = sanitize_text("Hello \x1b[31mWorld\x1b[0m!")
+print(clean) # 'Hello [31mWorld[0m!'
+```
+
+#### `filter_excessive_repeats`
+
+Identifies sequences where a single character or a two-character substring repeats at least the specified threshold times and removes them entirely from the string.
+
+*   **Args**:
+    *   `text` (str): The input string.
+    *   `threshold` (int, optional): The maximum allowed consecutive repetitions. Default `5`.
+*   **Returns**:
+    *   (str): The processed string with excessive repetitions removed.
+
+*   **Example**:
+```python
+from structai import filter_excessive_repeats
+
+clean = filter_excessive_repeats("Helloooooo World", threshold=5)
+print(clean) # "Hell World"
+
+clean = filter_excessive_repeats("Hello\\b\\b World", threshold=2)
+print(clean) # "Heo World"
+```
+
+#### `str2dict`
+
+Robustly converts a string representation of a dictionary to a Python `dict`. It handles common formatting errors and uses `json_repair` as a fallback.
+
+*   **Args**:
+    *   `s` (str): The string representation of a dictionary.
+*   **Returns**:
+    *   (dict): The parsed dictionary.
+
+*   **Example**:
+```python
+from structai import str2dict
+
+d = str2dict("{'a': 1, 'b': 2}")
+print(d['a']) # 1
+```
+
+#### `str2list`
+
+Robustly converts a string representation of a list to a Python `list`.
+
+*   **Args**:
+    *   `s` (str): The string representation of a list.
+*   **Returns**:
+    *   (list): The parsed list.
+
+*   **Example**:
+```python
+from structai import str2list
+
+l = str2list("[1, 2, 3]")
+print(len(l)) # 3
+```
+
+#### `remove_tag`
+
+Removes specified tags from a string, replacing them with a separator (default newline).
+
+*   **Args**:
+    *   `s` (str): The input string.
+    *   `tags` (list[str], optional): A list of tags to remove. Default `["<think>", "</think>", "<answer>", "</answer>"]`.
+    *   `r` (str, optional): The replacement string. Default `"\n"`.
+*   **Returns**:
+    *   (str): The cleaned string.
+
+*   **Example**:
+```python
+from structai import remove_tag
+
+clean_text = remove_tag("<think>...</think> Answer")
+# Output: "...\n Answer"
+```
+
+#### `parse_think_answer`
+
+Parses a string containing Chain-of-Thought tags (`<think>...</think>` and `<answer>...</answer>`) and returns the content of both.
+
+*   **Args**:
+    *   `text` (str): The input text containing the tags.
+*   **Returns**:
+    *   (tuple): A tuple `(think_content, answer_content)`.
+
+*   **Example**:
+```python
+from structai import parse_think_answer
+
+raw_text = "<think>Step 1...</think><answer>42</answer>"
+think, answer = parse_think_answer(raw_text)
+print(f"Reasoning: {think}") # Reasoning: Step 1...
+print(f"Result: {answer}") # Result: 42
+```
+
+#### `extract_within_tags`
+
+Extracts the substring found between two specific tags.
+
+*   **Args**:
+    *   `content` (str): The text to search within.
+    *   `start_tag` (str, optional): The opening tag. Default `'<answer>'`.
+    *   `end_tag` (str, optional): The closing tag. Default `'</answer>'`.
+    *   `default_return` (Any, optional): The value to return if tags are not found. Default `None`.
+*   **Returns**:
+    *   (str | Any): The extracted content string, or `default_return` if not found.
+
+*   **Example**:
+```python
+from structai import extract_within_tags
+
+text = "Result: <json>{...}</json>"
+json_str = extract_within_tags(text, "<json>", "</json>")
+# Output: "{...}"
+```
+
+### Network Service
+
+#### `add_no_proxy_if_private`
+
+Checks if the hostname in the URL is a private IP address. If so, it adds it to the `no_proxy` environment variable to bypass proxies.
+
+*   **Args**:
+    *   `url` (str): The URL to check.
+*   **Returns**:
+    *   None
+
+*   **Example**:
+```python
+from structai import add_no_proxy_if_private
+
+add_no_proxy_if_private("http://192.168.1.100:8080/v1")
+```
+
+#### `run_server`
 
 Starts a FastAPI server that acts as a proxy to an OpenAI-compatible LLM provider using LLM_BASE_URL and LLM_API_KEY in environment variables.
 
@@ -454,7 +542,9 @@ if __name__ == "__main__":
     run_server()
 ```
 
-### `timeout_limit`
+### Time Limit
+
+#### `timeout_limit`
 
 A decorator that enforces a maximum execution time on a function. Raises `TimeoutError` if the limit is exceeded.
 
@@ -476,7 +566,7 @@ def task():
 task()
 ```
 
-### `run_with_timeout`
+#### `run_with_timeout`
 
 Runs a function with a specified timeout without using a decorator.
 
@@ -496,82 +586,4 @@ def task(x):
     return x * 2
 
 result = run_with_timeout(task, args=(10,), timeout=1.0)
-```
-
-### `remove_tag`
-
-Removes specified tags from a string, replacing them with a separator (default newline).
-
-*   **Args**:
-    *   `s` (str): The input string.
-    *   `tags` (list[str], optional): A list of tags to remove. Default `["<think>", "</think>", "<answer>", "</answer>"]`.
-    *   `r` (str, optional): The replacement string. Default `"\n"`.
-*   **Returns**:
-    *   (str): The cleaned string.
-
-*   **Example**:
-```python
-from structai import remove_tag
-
-clean_text = remove_tag("<think>...</think> Answer")
-# Output: "...\n Answer"
-```
-
-### `parse_think_answer`
-
-Parses a string containing Chain-of-Thought tags (`<think>...</think>` and `<answer>...</answer>`) and returns the content of both.
-
-*   **Args**:
-    *   `text` (str): The input text containing the tags.
-*   **Returns**:
-    *   (tuple): A tuple `(think_content, answer_content)`.
-
-*   **Example**:
-```python
-from structai import parse_think_answer
-
-raw_text = "<think>Step 1...</think><answer>42</answer>"
-think, answer = parse_think_answer(raw_text)
-print(f"Reasoning: {think}") # Reasoning: Step 1...
-print(f"Result: {answer}") # Result: 42
-```
-
-### `extract_within_tags`
-
-Extracts the substring found between two specific tags.
-
-*   **Args**:
-    *   `content` (str): The text to search within.
-    *   `start_tag` (str, optional): The opening tag. Default `'<answer>'`.
-    *   `end_tag` (str, optional): The closing tag. Default `'</answer>'`.
-    *   `default_return` (Any, optional): The value to return if tags are not found. Default `None`.
-*   **Returns**:
-    *   (str | Any): The extracted content string, or `default_return` if not found.
-
-*   **Example**:
-```python
-from structai import extract_within_tags
-
-text = "Result: <json>{...}</json>"
-json_str = extract_within_tags(text, "<json>", "</json>")
-# Output: "{...}"
-```
-
-### `get_all_file_paths`
-
-Recursively retrieves all file paths in a directory that match a given suffix.
-
-*   **Args**:
-    *   `directory` (str): The root directory to search.
-    *   `suffix` (str, optional): The file suffix to filter by (e.g., '.py'). Default `''` (matches all files).
-*   **Returns**:
-    *   (list[str]): A list of matching file paths.
-
-*   **Example**:
-```python
-from structai import get_all_file_paths
-
-# Get all Python files in the current directory
-py_files = get_all_file_paths(".", suffix=".py")
-print(py_files)
 ```
