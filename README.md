@@ -28,7 +28,7 @@ export LLM_BASE_URL="your-api-base-url"
 
 ## 📚 StructAI Library Documentation
 
-### 📜 Table of Contents
+### Table of Contents
 
 - [🌟 Skill](#skill)
   - [`structai_skill`](#structai_skill)
