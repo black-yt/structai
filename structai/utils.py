@@ -72,12 +72,35 @@ def timeout_limit(timeout=None):
 
 
 def remove_tag(s: str, tags: list[str] = ["<think>", "</think>", "<answer>", "</answer>"], r: str = "\n"):
+    """
+    Removes specified tags from a string, replacing them with a separator (default newline).
+
+    Args:
+        s (str): The input string.
+        tags (list[str], optional): A list of tags to remove. Default `["<think>", "</think>", "<answer>", "</answer>"]`.
+        r (str, optional): The replacement string. Default `"\n"`.
+
+    Returns:
+        str: The cleaned string.
+    """
     for tag in tags:
         s = s.replace(tag, r)
     return s.strip(r).strip()
 
 
 def parse_think_answer(text):
+    """
+    Parses a string containing Chain-of-Thought tags (`<think>...</think>` and `<answer>...</answer>`) and returns the content of both.
+
+    Args:
+        text (str): The input text containing the tags.
+
+    Returns:
+        tuple: A tuple `(think_content, answer_content)`.
+
+    Raises:
+        ValueError: If input is not a string, tags are missing, or content is empty.
+    """
     if not isinstance(text, str):
         raise ValueError("Input text must be a string")
     
@@ -129,6 +152,18 @@ def parse_think_answer(text):
 
 
 def extract_within_tags(content: str, start_tag='<answer>', end_tag='</answer>', default_return=None):
+    """
+    Extracts the substring found between two specific tags.
+
+    Args:
+        content (str): The text to search within.
+        start_tag (str, optional): The opening tag. Default `'<answer>'`.
+        end_tag (str, optional): The closing tag. Default `'</answer>'`.
+        default_return (Any, optional): The value to return if tags are not found. Default `None`.
+
+    Returns:
+        str | Any: The extracted content string, or `default_return` if not found.
+    """
     content = str(content)
     start_index = content.rfind(start_tag)
     if start_index != -1:
@@ -140,7 +175,14 @@ def extract_within_tags(content: str, start_tag='<answer>', end_tag='</answer>',
 
 def get_all_file_paths(directory, suffix=''):
     """
-    Get all file paths with the specified suffix in the directory.
+    Recursively retrieves all file paths in a directory that match a given suffix.
+
+    Args:
+        directory (str): The root directory to search.
+        suffix (str, optional): The file suffix to filter by (e.g., '.py'). Default `''` (matches all files).
+
+    Returns:
+        list[str]: A list of matching file paths.
     """
     file_paths = []
     for root, dirs, files in os.walk(directory):
@@ -172,10 +214,14 @@ _ESCAPED_CTRL_RE = re.compile(
 
 def sanitize_text(text: str) -> str:
     """
-    Sanitize subprocess / tqdm / CLI output for:
-    - JSON serialization
-    - LLM input
-    - Human-readable logs
+    Sanitizes text by keeping only ASCII English characters, digits, and common punctuation.
+    Removes control characters and ANSI codes.
+
+    Args:
+        text (str): The text to sanitize.
+
+    Returns:
+        str: The sanitized text.
     """
     if not text:
         return text

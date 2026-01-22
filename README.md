@@ -225,6 +225,31 @@ print(texts[0])
 
 [Back to Table of Contents](#table-of-contents)
 
+#### `print_messages`
+
+Print chat messages with colored labels and text.
+
+*   **Args**:
+    *   `messages` (list): List of message dictionaries with `role` and `content`.
+    *   `user_color` (str, optional): Color for the user's message text and label background. Default is `cyan`.
+    *   `ai_color` (str, optional): Color for the assistant's message text and label background. Default is `yellow`.
+    *   `label_text_color` (str, optional): Color for the label text (User and Assistant). Default is `grey`.
+*   **Returns**:
+    *   None
+
+*   **Example**:
+```python
+from structai import print_messages
+
+messages = [
+    {"role": "user", "content": "My name is Bob."},
+    {"role": "assistant", "content": "Hello Bob."}
+]
+print_messages(messages)
+```
+
+[Back to Table of Contents](#table-of-contents)
+
 ### Concurrent
 
 #### `multi_thread`

@@ -2,6 +2,18 @@ import concurrent.futures
 from tqdm import tqdm
 
 def multi_thread(inp_list, function, max_workers=40, use_tqdm=True):
+    """
+    Executes a function concurrently for each item in `inp_list` using a thread pool.
+
+    Args:
+        inp_list (list[dict]): A list of dictionaries, where each dictionary contains keyword arguments for `function`.
+        function (callable): The function to execute.
+        max_workers (int, optional): The maximum number of threads. Default `40`.
+        use_tqdm (bool, optional): Whether to show a progress bar. Default `True`.
+
+    Returns:
+        list: A list of results corresponding to the input list order.
+    """
     results = [None] * len(inp_list)  # Initialize results list
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_index = {
@@ -24,6 +36,19 @@ def multi_thread(inp_list, function, max_workers=40, use_tqdm=True):
     return results
 
 def multi_process(inp_list, function, max_workers=40, use_tqdm=True):
+    """
+    Executes a function concurrently for each item in `inp_list` using a process pool.
+    Ideal for CPU-bound tasks.
+
+    Args:
+        inp_list (list[dict]): A list of dictionaries, where each dictionary contains keyword arguments for `function`.
+        function (callable): The function to execute.
+        max_workers (int, optional): The maximum number of processes. Default `40`.
+        use_tqdm (bool, optional): Whether to show a progress bar. Default `True`.
+
+    Returns:
+        list: A list of results corresponding to the input list order.
+    """
     results = [None] * len(inp_list)  # Initialize results list
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         future_to_index = {

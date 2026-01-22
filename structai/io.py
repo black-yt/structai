@@ -5,8 +5,28 @@ import pickle
 
 def load_file(path):
     """
-    Automatically reads files based on their file extensions:
-    Supported formats: json, jsonl, csv, txt, md, pkl, parquet, py, npy, pt, png, jpg
+    Automatically reads a file based on its extension.
+
+    Supported formats:
+    - .json: Returns dict or list.
+    - .jsonl: Returns list of dicts.
+    - .csv: Returns pandas.DataFrame.
+    - .txt, .md, .py: Returns str.
+    - .pkl: Returns unpickled object.
+    - .parquet: Returns pandas.DataFrame.
+    - .xlsx: Returns pandas.DataFrame.
+    - .npy: Returns numpy.ndarray.
+    - .pt: Returns torch object.
+    - .png, .jpg, .jpeg: Returns PIL.Image.Image.
+
+    Args:
+        path (str): The path to the file to be read.
+
+    Returns:
+        Any: The content of the file, parsed into an appropriate Python object.
+
+    Raises:
+        ValueError: If the file extension is not supported.
     """
     ext = os.path.splitext(path)[1].lower()
 
@@ -64,8 +84,26 @@ def load_file(path):
 
 def save_file(data, path):
     """
-    Automatically save files based on their file extensions:
-    Supported formats: json, jsonl, csv, txt, md, pkl, parquet, py, npy, pt, png, jpg
+    Automatically saves data to a file based on the extension. Creates necessary directories if they don't exist.
+
+    Supported formats:
+    - .json: Saves dict or list.
+    - .jsonl: Saves list of dicts.
+    - .csv: Saves pandas.DataFrame.
+    - .txt, .md, .py: Saves string representation.
+    - .pkl: Saves object using pickle.
+    - .parquet: Saves pandas.DataFrame.
+    - .xlsx: Saves pandas.DataFrame.
+    - .npy: Saves numpy array.
+    - .pt: Saves torch object.
+    - .png, .jpg, .jpeg: Saves PIL.Image or numpy array.
+
+    Args:
+        data (Any): The data object to save.
+        path (str): The destination file path.
+
+    Raises:
+        ValueError: If the file extension is not supported or data type doesn't match extension requirements.
     """
     # Ensure directory exists
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
@@ -151,12 +189,26 @@ def save_file(data, path):
 
 
 def print_once(msg):
+    """
+    Prints a message to stdout only once during the entire program execution.
+    Useful for logging warnings or info inside loops.
+
+    Args:
+        msg (str): The message to print.
+    """
     if not hasattr(print_once, "_printed"):
         print(msg)
         print_once._printed = True
 
 
 def make_print_once():
+    """
+    Creates and returns a local function that prints a message only once.
+    This is useful if you need a "print once" behavior scoped to a specific function or instance rather than globally.
+
+    Returns:
+        callable: A function `inner(msg)` that behaves like `print_once`.
+    """
     printed = False
     
     def inner(msg):

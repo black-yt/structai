@@ -201,6 +201,31 @@ print(texts[0])
 
 [Back to Table of Contents](#table-of-contents)
 
+#### `print_messages`
+
+Print chat messages with colored labels and text.
+
+*   **Args**:
+    *   `messages` (list): List of message dictionaries with `role` and `content`.
+    *   `user_color` (str, optional): Color for the user's message text and label background. Default is `cyan`.
+    *   `ai_color` (str, optional): Color for the assistant's message text and label background. Default is `yellow`.
+    *   `label_text_color` (str, optional): Color for the label text (User and Assistant). Default is `grey`.
+*   **Returns**:
+    *   None
+
+*   **Example**:
+```python
+from structai import print_messages
+
+messages = [
+    {"role": "user", "content": "My name is Bob."},
+    {"role": "assistant", "content": "Hello Bob."}
+]
+print_messages(messages)
+```
+
+[Back to Table of Contents](#table-of-contents)
+
 ### Concurrent
 
 #### `multi_thread`
@@ -661,6 +686,13 @@ result = run_with_timeout(task, args=(10,), timeout=1.0)
 """
 
 def structai_skill():
+    """
+    Returns a comprehensive documentation string for the StructAI library in Markdown format.
+    This is useful for providing context to LLMs about the available tools in this library.
+
+    Returns:
+        str: The documentation string.
+    """
     return skill.strip()
 
 if __name__ == "__main__":

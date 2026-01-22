@@ -18,6 +18,16 @@ from .mp import multi_thread
 
 
 def str2dict(s: str) -> dict:
+    """
+    Robustly converts a string representation of a dictionary to a Python `dict`.
+    It handles common formatting errors and uses `json_repair` as a fallback.
+
+    Args:
+        s (str): The string representation of a dictionary.
+
+    Returns:
+        dict: The parsed dictionary.
+    """
     start_index = s.find('{')
     if start_index != -1:
         end_index = s.rfind('}') + 1
@@ -33,6 +43,15 @@ def str2dict(s: str) -> dict:
 
 
 def str2list(s: str) -> list:
+    """
+    Robustly converts a string representation of a list to a Python `list`.
+
+    Args:
+        s (str): The string representation of a list.
+
+    Returns:
+        list: The parsed list.
+    """
     start_index = s.find('[')
     if start_index != -1:
         end_index = s.rfind(']') + 1
@@ -48,12 +67,28 @@ def str2list(s: str) -> list:
 
 
 def encode_image(image_obj: Image.Image) -> str:
+    """
+    Encodes a PIL Image object into a base64 string.
+
+    Args:
+        image_obj (PIL.Image.Image): The image object to encode.
+
+    Returns:
+        str: The base64 encoded string.
+    """
     buffered = io.BytesIO()
     image_obj.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
 def add_no_proxy_if_private(url: str):
+    """
+    Checks if the hostname in the URL is a private IP address.
+    If so, it adds it to the `no_proxy` environment variable to bypass proxies.
+
+    Args:
+        url (str): The URL to check.
+    """
     if not url:
         return
     parsed = urlparse(url)
@@ -83,15 +118,13 @@ def add_no_proxy_if_private(url: str):
 
 def messages_to_responses_input(messages):
     """
-    Convert Chat Completions messages format to Responses API input format.
-    
+    Converts standard Chat Completions `messages` format (list of dicts) to the input format required by the Responses API.
+
     Args:
-        messages (list): List of message dictionaries with 'role' and 'content'.
-        
+        messages (list[dict]): List of message dictionaries with 'role' and 'content'.
+
     Returns:
-        tuple: (system_prompt_content, input_blocks)
-            - system_prompt_content (str or None): The system prompt content.
-            - input_blocks (list): List of input blocks for Responses API.
+        tuple: A tuple containing `(system_prompt_content, input_blocks)`.
     """
     system_prompt_content = None
     input_blocks = []
@@ -140,11 +173,13 @@ def messages_to_responses_input(messages):
 
 def extract_text_outputs(result) -> list[str]:
     """
-    Unified extractor for:
-    - Chat Completions API
-    - Responses API
+    Extracts the text content from an LLM API response object (supports both Chat Completions and Responses API formats).
 
-    Always returns: List[str]
+    Args:
+        result (object): The response object from the LLM API.
+
+    Returns:
+        list[str]: A list of extracted text outputs.
     """
 
     # ---------- Chat Completions ----------
@@ -200,7 +235,40 @@ def extract_text_outputs(result) -> list[str]:
     return outputs
 
 
+def print_messages(messages, user_color="cyan", ai_color="yellow", label_text_color="grey"):
+    """
+    Print chat messages with colored labels and text.
+
+    Args:
+        messages (list): List of message dictionaries with `role` and `content`.
+        user_color (str, optional): Color for the user's message text and label background. Default is `cyan`.
+        ai_color (str, optional): Color for the assistant's message text and label background. Default is `yellow`.
+        label_text_color (str, optional): Color for the label text (User and Assistant). Default is `grey`.
+    """
+    try:
+        from termcolor import colored
+    except:
+        print("Please install termcolor: pip install termcolor")
+        return
+    
+    user_label = colored("[User]", label_text_color, f"on_{user_color}", attrs=["bold"])
+    ai_label = colored("[Assistant]", label_text_color, f"on_{ai_color}", attrs=["bold"])
+
+    for idx, item in enumerate(messages):
+        role = item["role"]
+        content = item["content"]
+        newline = "\n" if idx > 0 else ""
+        if role == "user":
+            print(f"{newline}{user_label}:\n{colored(content, user_color)}")
+        if role == "assistant":
+            print(f"{newline}{ai_label}:\n{colored(content, ai_color)}")
+
+
 class LLMAgent:
+    """
+    A powerful wrapper class for interacting with OpenAI-compatible LLM APIs.
+    It handles retries, timeouts, and structured output validation.
+    """
     def __init__(self,
                 api_key = None,
                 api_base = None,
@@ -214,6 +282,22 @@ class LLMAgent:
                 max_try = 1,
                 use_responses_api = False
         ):
+        """
+        Initialize the LLMAgent.
+
+        Args:
+            api_key (str, optional): API Key. Defaults to `os.environ["LLM_API_KEY"]`.
+            api_base (str, optional): Base URL. Defaults to `os.environ["LLM_BASE_URL"]`.
+            model_version (str, optional): Model identifier. Default `'gpt-4.1-mini'`.
+            system_prompt (str, optional): Default system prompt. Default `'You are a helpful assistant.'`.
+            max_tokens (int, optional): Maximum tokens for generation. Default `None`.
+            temperature (float, optional): Sampling temperature. Default `0`.
+            http_client (httpx.Client, optional): Optional custom httpx client.
+            headers (dict, optional): Optional custom headers.
+            time_limit (int, optional): Timeout in seconds. Default `300` (5 minutes).
+            max_try (int, optional): Default number of retries. Default `1`.
+            use_responses_api (bool, optional): Whether to use the Responses API format. Default `False`.
+        """
         
         # Load from environment if not provided
         if api_key is None:
@@ -316,6 +400,17 @@ class LLMAgent:
         return assistant_responses
 
     def llm_api(self, query, system_prompt=None, **kwargs):
+        """
+        Executes the LLM API call with a timeout.
+
+        Args:
+            query (str): The input query.
+            system_prompt (str, optional): The system prompt.
+            **kwargs: Additional arguments for the API call.
+
+        Returns:
+            list[str]: A list of response strings.
+        """
         return run_with_timeout(
             self._llm_api_impl, 
             args=(query, system_prompt), 
@@ -324,6 +419,35 @@ class LLMAgent:
         )
 
     def safe_api(self, query, system_prompt=None, return_example: Union[list, dict, str]=None, max_try=None, wait_time=0.0, **kwargs):
+        """
+        Sends a query to the LLM with built-in validation, parsing, and retry logic.
+
+        Args:
+            query (str): The main input text or prompt to be sent to the LLM.
+            system_prompt (str, optional): The system instruction. Overrides the default if provided.
+            return_example (str | list | dict, optional): A template defining the expected structure and type of the response.
+                - `None` or `str` (default): Returns raw response string.
+                - `list`: Expects a JSON list string. Validates element types if example elements are provided.
+                - `dict`: Expects a JSON object string. Validates keys (supports fuzzy matching).
+            max_try (int, optional): Max attempts. Defaults to instance's `max_try`.
+            wait_time (float, optional): Time in seconds to wait between retries. Default `0.0`.
+            **kwargs: Additional arguments:
+                - n (int, optional): Number of completion choices. Default `1`.
+                - max_tokens (int, optional): Overrides instance's `max_tokens`.
+                - temperature (float, optional): Overrides instance's `temperature`.
+                - image_paths (list[str], optional): List of local image paths for multimodal models.
+                - history (list[dict], optional): Conversation history `[{"role": "user", "content": "..."}, ...]`.
+                - use_responses_api (bool, optional): Overrides instance setting.
+                - list_len (int, optional): *Validation* - Enforces exact list length.
+                - list_min (int | float, optional): *Validation* - Enforces minimum value for list elements.
+                - list_max (int | float, optional): *Validation* - Enforces maximum value for list elements.
+                - check_keys (bool, optional): *Validation* - Whether to validate dict keys. Default `True`.
+
+        Returns:
+            str | list | dict: The parsed response from the LLM.
+                - If `n > 1`, returns a list of results.
+                - Returns `None` if all retries fail.
+        """
         if max_try is None:
             max_try = self.max_try
             
@@ -410,6 +534,35 @@ class LLMAgent:
         
     
     def __call__(self, query, *args, **kwargs):
+        """
+        Sends a query to the LLM with built-in validation, parsing, and retry logic.
+
+        Args:
+            query (str): The main input text or prompt to be sent to the LLM.
+            system_prompt (str, optional): The system instruction. Overrides the default if provided.
+            return_example (str | list | dict, optional): A template defining the expected structure and type of the response.
+                - `None` or `str` (default): Returns raw response string.
+                - `list`: Expects a JSON list string. Validates element types if example elements are provided.
+                - `dict`: Expects a JSON object string. Validates keys (supports fuzzy matching).
+            max_try (int, optional): Max attempts. Defaults to instance's `max_try`.
+            wait_time (float, optional): Time in seconds to wait between retries. Default `0.0`.
+            **kwargs: Additional arguments:
+                - n (int, optional): Number of completion choices. Default `1`.
+                - max_tokens (int, optional): Overrides instance's `max_tokens`.
+                - temperature (float, optional): Overrides instance's `temperature`.
+                - image_paths (list[str], optional): List of local image paths for multimodal models.
+                - history (list[dict], optional): Conversation history `[{"role": "user", "content": "..."}, ...]`.
+                - use_responses_api (bool, optional): Overrides instance setting.
+                - list_len (int, optional): *Validation* - Enforces exact list length.
+                - list_min (int | float, optional): *Validation* - Enforces minimum value for list elements.
+                - list_max (int | float, optional): *Validation* - Enforces maximum value for list elements.
+                - check_keys (bool, optional): *Validation* - Whether to validate dict keys. Default `True`.
+
+        Returns:
+            str | list | dict: The parsed response from the LLM.
+                - If `n > 1`, returns a list of results.
+                - Returns `None` if all retries fail.
+        """
         return self.safe_api(query, *args, **kwargs)
     
 
@@ -435,6 +588,15 @@ if __name__ == '__main__':
     assert str2list('  [1, 2, 3]  ') == [1, 2, 3], f"[===ERROR===][structai][llm_api.py][main] str2list failed"
     assert str2list("text [1, 2] text") == [1, 2], f"[===ERROR===][structai][llm_api.py][main] str2list failed"
     print("str2list passed")
+
+    # Test print_messages
+    print("Testing print_messages...")
+    pmessages = [
+        {"role": "user", "content": "My name is Bob."},
+        {"role": "assistant", "content": "Hello Bob."}
+    ]
+    print_messages(pmessages)
+    print("print_messages passed")
 
     # Test LLMAgent
     print("\nTesting LLMAgent...")

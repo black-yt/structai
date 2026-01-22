@@ -9,11 +9,24 @@ LLM_API_KEY = os.environ.get("LLM_API_KEY", "")
 
 def run_server(host="0.0.0.0", port=8001):
     """
-    Run the OpenAI proxy server.
+    Starts a FastAPI server that acts as a proxy to an OpenAI-compatible LLM provider
+    using LLM_BASE_URL and LLM_API_KEY in environment variables.
+
+    Args:
+        host (str, optional): The host to bind to. Default `"0.0.0.0"`.
+        port (int, optional): The port to bind to. Default `8001`.
     """
-    from fastapi import FastAPI, Request, Response
     import httpx
-    import uvicorn
+    try:
+        from fastapi import FastAPI, Request, Response
+    except:
+        print("Please install fastapi: pip install fastapi")
+        return
+    try:
+        import uvicorn
+    except:
+        print("Please install uvicorn: pip install  uvicorn")
+        return
 
     # =========================
     # App
@@ -75,5 +88,5 @@ def run_server(host="0.0.0.0", port=8001):
     uvicorn.run(app, host=host, port=port)
 
 if __name__ == "__main__":
-    # python -m structai.openai_server
+    # python -m structai.server
     run_server()
