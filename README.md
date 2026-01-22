@@ -389,6 +389,8 @@ Recursively retrieves all file paths in a directory that match a given suffix.
 *   **Args**:
     *   `directory` (str): The root directory to search.
     *   `suffix` (str, optional): The file suffix to filter by (e.g., '.py'). Default `''` (matches all files).
+    *   `filter_func` (callable, optional): A function that takes a file path and returns True to include it. Default `None`.
+    *   `absolute` (bool, optional): Whether to return absolute paths. Default `True`.
 *   **Returns**:
     *   (list[str]): A list of matching file paths.
 
@@ -399,6 +401,13 @@ from structai import get_all_file_paths
 # Get all Python files in the current directory
 py_files = get_all_file_paths(".", suffix=".py")
 print(py_files)
+
+# Get relative paths of all files, excluding those in 'test' directory
+files = get_all_file_paths(
+    ".", 
+    filter_func=lambda p: "test" not in p, 
+    absolute=False
+)
 ```
 
 [Back to Table of Contents](#table-of-contents)

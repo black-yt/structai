@@ -173,13 +173,15 @@ def extract_within_tags(content: str, start_tag='<answer>', end_tag='</answer>',
     return default_return
 
 
-def get_all_file_paths(directory, suffix=''):
+def get_all_file_paths(directory, suffix='', filter_func=None, absolute=True):
     """
     Recursively retrieves all file paths in a directory that match a given suffix.
 
     Args:
         directory (str): The root directory to search.
         suffix (str, optional): The file suffix to filter by (e.g., '.py'). Default `''` (matches all files).
+        filter_func (callable, optional): A function that takes a file path and returns True to include it. Default None.
+        absolute (bool, optional): Whether to return absolute paths. Default True.
 
     Returns:
         list[str]: A list of matching file paths.
@@ -188,8 +190,15 @@ def get_all_file_paths(directory, suffix=''):
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(suffix):
-                file_paths.append(os.path.join(root, file))
-    return file_paths
+                path = os.path.join(root, file)
+                if filter_func and not filter_func(path):
+                    continue
+                
+                if absolute:
+                    file_paths.append(os.path.abspath(path))
+                else:
+                    file_paths.append(os.path.relpath(path, directory))
+    return sorted(file_paths)
 
 
 _ALLOWED_CHARS = set(
@@ -364,5 +373,41 @@ if __name__ == "__main__":
     assert cutoff_text("asdfjsdjgofgofdkmsdlfmldmsgkgnfkdsfagfsdafdsfskfn", 22) == 'asdfjsd\n\n...\n\ndsfskfn', f"[===ERROR===][structai][utils.py][main] cutoff_text failed"
     assert len(cutoff_text("asdfjsdjgofgofdkmsdlfmldmsgkgnfkdsfagfsdafdsfskfn", 23)) == 23, f"[===ERROR===][structai][utils.py][main] cutoff_text failed"
     print("cutoff_text passed")
+
+    # Test get_all_file_paths
+    print("Testing get_all_file_paths...")
+    # Create dummy files
+    test_dir = "test_dir_utils_py"
+    if os.path.exists(test_dir):
+        import shutil
+        shutil.rmtree(test_dir)
+    os.makedirs(os.path.join(test_dir, "sub"), exist_ok=True)
+    with open(os.path.join(test_dir, "a.txt"), "w") as f: f.write("a")
+    with open(os.path.join(test_dir, "b.py"), "w") as f: f.write("b")
+    with open(os.path.join(test_dir, "sub", "c.txt"), "w") as f: f.write("c")
+    
+    try:
+        # Test basic suffix
+        paths = get_all_file_paths(test_dir, suffix=".txt", absolute=False)
+        assert "a.txt" in paths and os.path.join("sub", "c.txt") in paths, f"Basic suffix failed: {paths}"
+        assert "b.py" not in paths, f"Basic suffix failed: {paths}"
+        
+        # Test absolute path
+        paths_abs = get_all_file_paths(test_dir, suffix=".txt", absolute=True)
+        assert os.path.isabs(paths_abs[0]), "Absolute path failed"
+        
+        # Test filter_func
+        def filter_c(p):
+            return "c.txt" not in p
+            
+        paths_filter = get_all_file_paths(test_dir, suffix=".txt", filter_func=filter_c, absolute=False)
+        assert "a.txt" in paths_filter, "Filter func failed"
+        assert os.path.join("sub", "c.txt") not in paths_filter, "Filter func failed"
+        
+    finally:
+        import shutil
+        if os.path.exists(test_dir):
+            shutil.rmtree(test_dir)
+    print("get_all_file_paths passed")
     
     print("utils.py tests completed.")
