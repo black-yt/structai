@@ -38,6 +38,7 @@ export LLM_BASE_URL="your-api-base-url"
     - [`__call__`](#__call__)
   - [`messages_to_responses_input`](#messages_to_responses_input)
   - [`extract_text_outputs`](#extract_text_outputs)
+  - [`print_messages`](#print_messages)
 - [🚀 Concurrent](#concurrent)
   - [`multi_thread`](#multi_thread)
   - [`multi_process`](#multi_process)
