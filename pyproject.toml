@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "structai"
-version = "0.1.14"
+version = "0.1.15"
 authors = [
   { name="Wanghan Xu", email="xu_wanghan@sjtu.edu.cn" },
 ]

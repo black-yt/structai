@@ -24,6 +24,11 @@ export LLM_API_KEY="your-api-key"
 export LLM_BASE_URL="your-api-base-url"
 ```
 
+> **Note:** If you need to use PDF parsing-related functions, please apply for the API at [MinerU](https://mineru.net/) and add it to your environment variables.
+```bash
+export MINERU_TOKEN="your-mineru-api-key"
+```
+
 ---
 
 ## 📚 StructAI Library Documentation
