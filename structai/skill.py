@@ -21,11 +21,13 @@ StructAI is a comprehensive utility library for accelerating LLM application dev
 - [📂 I/O](#io)
   - [`load_file`](#load_file)
   - [`save_file`](#save_file)
+  - [`read_pdf`](#read_pdf)
   - [`encode_image`](#encode_image)
   - [`get_all_file_paths`](#get_all_file_paths)
   - [`print_once`](#print_once)
   - [`make_print_once`](#make_print_once)
 - [📝 String Processing](#string-processing)
+  - [`extract_markdown_images`](#extract_markdown_images)
   - [`sanitize_text`](#sanitize_text)
   - [`filter_excessive_repeats`](#filter_excessive_repeats)
   - [`cutoff_text`](#cutoff_text)
@@ -340,6 +342,42 @@ save_file(data, "backup.pkl")
 
 [Back to Table of Contents](#table-of-contents)
 
+#### `read_pdf`
+
+Processes PDF file(s) by uploading them to MinerU for parsing, downloading the results, and loading the extracted content (text and images) into memory.
+
+*   **Args**:
+    *   `path` (str | list[str]): A single file path (str) or a list of file paths (list[str]) pointing to the PDF files to be processed.
+*   **Returns**:
+    *   (dict | list[dict | None] | None):
+        *   If `path` is a single string, returns a dictionary containing the parsed data, or None if processing failed.
+        *   If `path` is a list, returns a list where each element is either a dictionary (success) or None (failure).
+        *   The result dictionary has the following structure:
+            ```python
+            {
+                "path": str,        # The original path of the PDF file.
+                "text": str,        # The full extracted text content in Markdown format.
+                "img_paths": list[str], # A list of absolute file paths to the extracted images.
+                "imgs": list[PIL.Image.Image] # A list of PIL Image objects corresponding to the images in `img_paths`.
+            }
+            ```
+
+*   **Example**:
+```python
+from structai import read_pdf
+
+# Process a single PDF
+result = read_pdf("paper.pdf")
+if result:
+    print(result["text"][:100])
+    print(f"Found {len(result['imgs'])} images")
+
+# Process multiple PDFs
+results = read_pdf(["doc1.pdf", "doc2.pdf"])
+```
+
+[Back to Table of Contents](#table-of-contents)
+
 #### `encode_image`
 
 Encodes a PIL Image object into a base64 string.
@@ -431,6 +469,26 @@ logger2("World") # Does nothing
 [Back to Table of Contents](#table-of-contents)
 
 ### String Processing
+
+#### `extract_markdown_images`
+
+Parses Markdown text to extract paths of embedded images.
+
+*   **Args**:
+    *   `text` (str): The Markdown content string to analyze.
+*   **Returns**:
+    *   (list[str]): A list of image file paths extracted from the Markdown text.
+
+*   **Example**:
+```python
+from structai import extract_markdown_images
+
+md_text = "Here is an image: ![alt](images/img1.jpg)"
+images = extract_markdown_images(md_text)
+print(images) # ['images/img1.jpg']
+```
+
+[Back to Table of Contents](#table-of-contents)
 
 #### `sanitize_text`
 

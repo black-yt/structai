@@ -3,6 +3,7 @@ from .llm_api import str2dict, str2list, add_no_proxy_if_private, encode_image, 
 from .mp import multi_thread, multi_process
 from .server import run_server
 from .utils import timeout_limit, run_with_timeout, parse_think_answer, extract_within_tags, get_all_file_paths, remove_tag, sanitize_text, filter_excessive_repeats, cutoff_text
+from .pdf import read_pdf, extract_markdown_images
 from .skill import structai_skill
 
 
@@ -31,5 +32,7 @@ __all__ = [
     "remove_tag",
     "filter_excessive_repeats",
     "sanitize_text",
-    "cutoff_text"
+    "cutoff_text",
+    "read_pdf",
+    "extract_markdown_images"
 ]
