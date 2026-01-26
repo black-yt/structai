@@ -16,7 +16,6 @@ from .utils import run_with_timeout, sanitize_text
 from .mp import multi_thread
 
 
-
 def str2dict(s: str) -> dict:
     """
     Robustly converts a string representation of a dictionary to a Python `dict`.
@@ -189,7 +188,11 @@ def extract_text_outputs(result) -> list[str]:
         for choice in result.choices:
             msg = getattr(choice, "message", None)
             if msg and msg.content:
-                outputs.append(msg.content)
+                if hasattr(msg, "reasoning_content"):
+                    content = f"<think>{msg.reasoning_content}<think>{msg.content}"
+                else:
+                    content = msg.content
+                outputs.append(content)
         return outputs
 
     # ---------- Responses API ----------
@@ -627,7 +630,7 @@ if __name__ == '__main__':
 
         # 2. Test gpt-5.2-pro
         def test_gpt_5_2_pro(use_responses_api):
-            agent = LLMAgent(model_version='gpt-5.2-pro', max_try=1, use_responses_api=use_responses_api)
+            agent = LLMAgent(model_version='gpt-5.2-pro', max_try=1, temperature=None, use_responses_api=use_responses_api)
             res = agent("Say 'hello'", max_tokens=20)
             print(f"    Result: {res}")
         run_test("Test 2: gpt-5.2-pro", test_gpt_5_2_pro)
