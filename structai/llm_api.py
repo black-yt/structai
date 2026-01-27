@@ -188,8 +188,8 @@ def extract_text_outputs(result) -> list[str]:
         for choice in result.choices:
             msg = getattr(choice, "message", None)
             if msg and msg.content:
-                if hasattr(msg, "reasoning_content"):
-                    content = f"<think>{msg.reasoning_content}<think>{msg.content}"
+                if hasattr(msg, "reasoning_content") and msg.reasoning_content:
+                    content = f"<think>{msg.reasoning_content}</think>{msg.content}"
                 else:
                     content = msg.content
                 outputs.append(content)
