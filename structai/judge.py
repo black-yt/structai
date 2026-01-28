@@ -63,7 +63,9 @@ class Judge:
         if use_llm_judge:
             self.judger = LLMAgent(api_key=api_key, api_base=api_base, model_version=model_version, system_prompt=system_prompt, max_tokens=max_tokens, temperature=temperature, http_client=http_client, headers=headers, time_limit=time_limit, max_try=max_try, use_responses_api=use_responses_api)
             self.prompt_tmp = prompt_tmp
-            self.llm_tags = llm_tags
+            self.llm_tags = {}
+            for k, v in llm_tags.items():
+                self.llm_tags[k.strip().lower()] = v
 
 
     def parse_short_answer(self, s: str):
@@ -136,8 +138,8 @@ class Judge:
         short_answer = self.parse_short_answer(answer)
         
         exact_match_list = []
-        math_veify_list = []
-        math_veify_cache = {}
+        math_verify_list = []
+        math_verify_cache = {}
         llm_judge_list = []
         llm_judge_cache = {}
 
@@ -149,21 +151,21 @@ class Judge:
 
             if self.use_math_verify:
                 if exact_match_result:
-                    math_veify_result = 1
-                    math_veify_cache[model_answer] = math_veify_result
-                elif model_answer not in math_veify_cache:
-                    math_veify_result = self.math_verify(short_model_answer, short_answer)
-                    math_veify_cache[model_answer] = math_veify_result
+                    math_verify_result = 1
+                    math_verify_cache[model_answer] = math_verify_result
+                elif model_answer not in math_verify_cache:
+                    math_verify_result = self.math_verify(short_model_answer, short_answer)
+                    math_verify_cache[model_answer] = math_verify_result
                 else:
-                    # print('math_veify_cache Hit')
-                    math_veify_result = math_veify_cache[model_answer]
-                math_veify_list.append(math_veify_result)
+                    # print('math_verify_cache Hit')
+                    math_verify_result = math_verify_cache[model_answer]
+                math_verify_list.append(math_verify_result)
             else:
-                math_veify_result = None
-                math_veify_list.append(math_veify_result)
+                math_verify_result = None
+                math_verify_list.append(math_verify_result)
 
             if self.use_llm_judge:
-                if exact_match_result or math_veify_result:
+                if exact_match_result or math_verify_result:
                     llm_judge_result = 1
                     llm_judge_cache[model_answer] = llm_judge_result
                 elif model_answer not in llm_judge_cache:
@@ -178,17 +180,17 @@ class Judge:
                 llm_judge_list.append(llm_judge_result)
 
         ques_dict["exact_match_list"] = exact_match_list
-        ques_dict["math_veify_list"] = math_veify_list
+        ques_dict["math_verify_list"] = math_verify_list
         ques_dict["llm_judge_list"] = llm_judge_list
 
         if exact_match_list[-1] == 1:
             ques_dict["exact_match"] = 1
         else:
             ques_dict["exact_match"] = 0
-        if math_veify_list[-1] == 1:
-            ques_dict["math_veify"] = 1
+        if math_verify_list[-1] == 1:
+            ques_dict["math_verify"] = 1
         else:
-            ques_dict["math_veify"] = 0
+            ques_dict["math_verify"] = 0
         if llm_judge_list[-1] == 1:
             ques_dict["llm_judge"] = 1
         else:
@@ -199,10 +201,10 @@ class Judge:
             ques_dict["exact_match_pass@k"] = 1
         else:
             ques_dict["exact_match_pass@k"] = 0
-        if 1 in math_veify_list:
-            ques_dict["math_veify_pass@k"] = 1
+        if 1 in math_verify_list:
+            ques_dict["math_verify_pass@k"] = 1
         else:
-            ques_dict["math_veify_pass@k"] = 0
+            ques_dict["math_verify_pass@k"] = 0
         if 1 in llm_judge_list:
             ques_dict["llm_judge_pass@k"] = 1
         else:
@@ -213,20 +215,20 @@ class Judge:
             ques_dict["exact_match_passall@k"] = 1
         else:
             ques_dict["exact_match_passall@k"] = 0
-        if math_veify_list.count(1) == len(math_veify_list):
-            ques_dict["math_veify_passall@k"] = 1
+        if math_verify_list.count(1) == len(math_verify_list):
+            ques_dict["math_verify_passall@k"] = 1
         else:
-            ques_dict["math_veify_passall@k"] = 0
+            ques_dict["math_verify_passall@k"] = 0
         if llm_judge_list.count(1) == len(llm_judge_list):
             ques_dict["llm_judge_passall@k"] = 1
         else:
             ques_dict["llm_judge_passall@k"] = 0
 
         if not self.use_math_verify:
-            del ques_dict["math_veify_list"]
-            del ques_dict["math_veify"]
-            del ques_dict["math_veify_pass@k"]
-            del ques_dict["math_veify_passall@k"]
+            del ques_dict["math_verify_list"]
+            del ques_dict["math_verify"]
+            del ques_dict["math_verify_pass@k"]
+            del ques_dict["math_verify_passall@k"]
         
         if not self.use_llm_judge:
             del ques_dict["llm_judge_list"]
