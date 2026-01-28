@@ -1,5 +1,6 @@
 from .mp import multi_thread
 from .utils import remove_tag, timeout_limit, parse_think_answer
+from .io import print_once
 from .llm_api import LLMAgent
 from typing import Union
 
@@ -160,7 +161,7 @@ class Judge:
         try:
             return parse_and_verify(short_model_answer, short_answer)
         except Exception as e:
-            print(f"[===ERROR===][structai][judge.py][Judge.math_verify]{str(e)}\n")
+            print_once(f"[===ERROR===][structai][judge.py][Judge.math_verify]{str(e)}\n")
             return None
 
 
