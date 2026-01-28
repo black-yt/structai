@@ -41,6 +41,9 @@ export MINERU_TOKEN="your-mineru-api-key"
   - [`LLMAgent Class`](#llmagent-class)
     - [`initialization`](#initialization)
     - [`__call__`](#__call__)
+  - [`Judge Class`](#judge-class)
+    - [`initialization`](#initialization-1)
+    - [`__call__`](#__call__-1)
   - [`messages_to_responses_input`](#messages_to_responses_input)
   - [`extract_text_outputs`](#extract_text_outputs)
   - [`print_messages`](#print_messages)
@@ -89,6 +92,10 @@ from structai import structai_skill
 
 docs = structai_skill()
 print(docs)
+```
+
+```bash
+python -c "from structai import structai_skill; print(structai_skill())" > structai_skill.md
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -190,6 +197,197 @@ answer = agent(
     history=history, 
 )
 # Output: 'Your name is Bob.'
+```
+
+[Back to Table of Contents](#table-of-contents)
+
+#### `Judge` Class
+
+A class for evaluating model answers against ground truth answers using multiple methods: Exact Match, Math Verify, and LLM-based Judge.
+
+##### `initialization`
+
+*   **Args**:
+    *   `api_key` (str, optional): API Key. Defaults to `os.environ["LLM_API_KEY"]`.
+    *   `api_base` (str, optional): Base URL. Defaults to `os.environ["LLM_BASE_URL"]`.
+    *   `model_version` (str, optional): Model identifier for the LLM Judge. Default `'gpt-4.1'`.
+    *   `system_prompt` (str, optional): System prompt for the LLM Judge. Default `'You are a helpful assistant.'`.
+    *   `max_tokens` (int, optional): Maximum tokens for LLM generation. Default `10`.
+    *   `temperature` (float, optional): Sampling temperature for LLM. Default `0`.
+    *   `http_client` (httpx.Client, optional): Optional custom httpx client.
+    *   `headers` (dict, optional): Optional custom headers.
+    *   `time_limit` (int, optional): Timeout in seconds for LLM API calls. Default `60`.
+    *   `max_try` (int, optional): Number of retries for LLM API calls. Default `2`.
+    *   `use_responses_api` (bool, optional): Whether to use the Responses API format. Default `False`.
+    *   `prompt_tmp` (str, optional): Template for the LLM Judge prompt. Defaults to `default_prompt_tmp`.
+    *   `use_tqdm` (bool, optional): Whether to show a progress bar for batch processing. Default `True`.
+    *   `use_math_verify` (bool, optional): Whether to use the `math_verify` library for evaluation. Default `True`.
+    *   `use_llm_judge` (bool, optional): Whether to use an LLM for evaluation. Default `True`.
+    *   `llm_tags` (dict, optional): Mapping of LLM output strings to scores. Default `{"correct": 1, "incorrect": 0}`.
+    *   `workers` (int, optional): Number of threads for parallel processing. Default `100`.
+
+*   **Returns**:
+    *   (Judge): Judge instance.
+
+*   **Example**:
+```python
+from structai.judge import Judge
+
+judge = Judge()
+```
+
+[Back to Table of Contents](#table-of-contents)
+
+##### `__call__`
+
+Evaluates one or more question dictionaries using the configured evaluation methods (Exact Match, Math Verify, LLM Judge).
+
+This method processes the input dictionary (or list of dictionaries), extracts the model answer(s), and compares them against the ground truth answer using the enabled evaluation strategies. It supports multiple model answer samples separated by `<answer_split>`.
+
+*   **Args**:
+    *   `ques_dict` (dict | list[dict]): A single dictionary or a list of dictionaries containing evaluation data.
+        Each dictionary must contain the following keys:
+        - `"question"` (str): The question text.
+        - `"answer"` (str): The ground truth answer.
+        - `"model_answer"` (str): The model's answer. If multiple samples are provided, they should be separated by `<answer_split>`.
+        - `"solution"` (str, optional): The step-by-step ground truth solution.
+
+*   **Returns**:
+    *   (dict | list[dict]): The input dictionary (or list of dictionaries) updated with the following evaluation metrics:
+
+        **Per-Sample Results (Lists):**
+        - `"exact_match_list"` (list[int]): A list of 0s and 1s indicating whether each sample in `model_answer` exactly matches the ground truth (case-insensitive).
+        - `"math_verify_list"` (list[int | None]): A list of 0s and 1s indicating mathematical equivalence for each sample (if `use_math_verify` is True).
+        - `"llm_judge_list"` (list[int | None]): A list of 0s and 1s indicating correctness as judged by an LLM for each sample (if `use_llm_judge` is True).
+
+        **Single-Sample Metrics (Based on the LAST sample):**
+        - `"exact_match"` (int): 1 if the **last** sample is an exact match, 0 otherwise.
+        - `"math_verify"` (int): 1 if the **last** sample is mathematically equivalent, 0 otherwise (if enabled).
+        - `"llm_judge"` (int): 1 if the **last** sample is correct according to the LLM, 0 otherwise (if enabled).
+
+        **Pass@k Metrics (At least ONE sample is correct):**
+        - `"exact_match_pass@k"` (int): 1 if **any** sample in the list is an exact match, 0 otherwise.
+        - `"math_verify_pass@k"` (int): 1 if **any** sample is mathematically equivalent, 0 otherwise (if enabled).
+        - `"llm_judge_pass@k"` (int): 1 if **any** sample is correct according to the LLM, 0 otherwise (if enabled).
+
+        **PassAll@k Metrics (ALL samples are correct):**
+        - `"exact_match_passall@k"` (int): 1 if **all** samples are exact matches, 0 otherwise.
+        - `"math_verify_passall@k"` (int): 1 if **all** samples are mathematically equivalent, 0 otherwise (if enabled).
+        - `"llm_judge_passall@k"` (int): 1 if **all** samples are correct according to the LLM, 0 otherwise (if enabled).
+
+*   **Example**:
+```python
+ques_dict = {
+    "question": "1+1=?",
+    "answer": "2",
+    "model_answer": "2"
+}
+result = judge(ques_dict)
+print(result["exact_match"]) # 1
+
+ques_dicts = [
+    {
+        "question": "Bob's age?",
+        "answer": "22",
+        "model_answer": "22<answer_split>Twenty-two"
+    },
+    {
+        "question": "Bob's age?",
+        "solution": "He was born in 2003, and today is 2025.",
+        "answer": "22",
+        "model_answer": "20<answer_split>Bob's age is 22"
+    },
+    {
+        "question": "Bob's age?",
+        "solution": "He was born in 2003, and today is 2025.",
+        "answer": "22",
+        "model_answer": "20<answer_split>20+2"
+    }
+]
+results = judge(ques_dicts)
+# Output:
+[
+    {
+        "question": "Bob's age?",
+        "answer": "22",
+        "model_answer": "22<answer_split>Twenty-two",
+        "exact_match_list": [
+            1,
+            0
+        ],
+        "math_verify_list": [
+            1,
+            0
+        ],
+        "llm_judge_list": [
+            1,
+            1
+        ],
+        "exact_match": 0,
+        "math_verify": 0,
+        "llm_judge": 1,
+        "exact_match_pass@k": 1,
+        "math_verify_pass@k": 1,
+        "llm_judge_pass@k": 1,
+        "exact_match_passall@k": 0,
+        "math_verify_passall@k": 0,
+        "llm_judge_passall@k": 1
+    },
+    {
+        "question": "Bob's age?",
+        "solution": "He was born in 2003, and today is 2025.",
+        "answer": "22",
+        "model_answer": "20<answer_split>Bob's age is 22",
+        "exact_match_list": [
+            0,
+            0
+        ],
+        "math_verify_list": [
+            0,
+            1
+        ],
+        "llm_judge_list": [
+            0,
+            1
+        ],
+        "exact_match": 0,
+        "math_verify": 1,
+        "llm_judge": 1,
+        "exact_match_pass@k": 0,
+        "math_verify_pass@k": 1,
+        "llm_judge_pass@k": 1,
+        "exact_match_passall@k": 0,
+        "math_verify_passall@k": 0,
+        "llm_judge_passall@k": 0
+    },
+    {
+        "question": "Bob's age?",
+        "solution": "He was born in 2003, and today is 2025.",
+        "answer": "22",
+        "model_answer": "20<answer_split>20+2",
+        "exact_match_list": [
+            0,
+            0
+        ],
+        "math_verify_list": [
+            0,
+            1
+        ],
+        "llm_judge_list": [
+            0,
+            1
+        ],
+        "exact_match": 0,
+        "math_verify": 1,
+        "llm_judge": 1,
+        "exact_match_pass@k": 0,
+        "math_verify_pass@k": 1,
+        "llm_judge_pass@k": 1,
+        "exact_match_passall@k": 0,
+        "math_verify_passall@k": 0,
+        "llm_judge_passall@k": 0
+    }
+]
 ```
 
 [Back to Table of Contents](#table-of-contents)

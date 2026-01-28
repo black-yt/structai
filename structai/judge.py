@@ -37,6 +37,10 @@ Output ONLY the string "correct" or "incorrect". Do not include any explanations
 
 
 class Judge:
+    """
+    A class for evaluating model answers against ground truth answers using multiple methods:
+    Exact Match, Math Verify, and LLM-based Judge.
+    """
     def __init__(self, 
                 api_key = None,
                 api_base = None,
@@ -56,6 +60,28 @@ class Judge:
                 llm_tags={"correct": 1, "incorrect": 0},
                 workers=100
         ):
+        """
+        Initialize the Judge.
+
+        Args:
+            api_key (str, optional): API Key. Defaults to `os.environ["LLM_API_KEY"]`.
+            api_base (str, optional): Base URL. Defaults to `os.environ["LLM_BASE_URL"]`.
+            model_version (str, optional): Model identifier for the LLM Judge. Default 'gpt-4.1'.
+            system_prompt (str, optional): System prompt for the LLM Judge. Default 'You are a helpful assistant.'.
+            max_tokens (int, optional): Maximum tokens for LLM generation. Default 10.
+            temperature (float, optional): Sampling temperature for LLM. Default 0.
+            http_client (httpx.Client, optional): Optional custom httpx client.
+            headers (dict, optional): Optional custom headers.
+            time_limit (int, optional): Timeout in seconds for LLM API calls. Default 60.
+            max_try (int, optional): Number of retries for LLM API calls. Default 2.
+            use_responses_api (bool, optional): Whether to use the Responses API format. Default False.
+            prompt_tmp (str, optional): Template for the LLM Judge prompt. Defaults to `default_prompt_tmp`.
+            use_tqdm (bool, optional): Whether to show a progress bar for batch processing. Default True.
+            use_math_verify (bool, optional): Whether to use the `math_verify` library for evaluation. Default True.
+            use_llm_judge (bool, optional): Whether to use an LLM for evaluation. Default True.
+            llm_tags (dict, optional): Mapping of LLM output strings to scores. Default {"correct": 1, "incorrect": 0}.
+            workers (int, optional): Number of threads for parallel processing. Default 100.
+        """
         self.use_tqdm = use_tqdm
         self.use_math_verify = use_math_verify
         self.use_llm_judge = use_llm_judge
@@ -69,6 +95,16 @@ class Judge:
 
 
     def parse_short_answer(self, s: str):
+        """
+        Extracts the short answer from a potentially long model output.
+        It handles chain-of-thought formats (e.g., <think>...</think>) if present.
+
+        Args:
+            s (str): The raw model output string.
+
+        Returns:
+            str: The extracted short answer.
+        """
         if "</think>" in s or "<answer>" in s:
             try:
                 _, short_answer = parse_think_answer(s)
@@ -80,6 +116,16 @@ class Judge:
 
 
     def exact_match(self, short_model_answer: str, short_answer: str):
+        """
+        Performs a case-insensitive exact match comparison.
+
+        Args:
+            short_model_answer (str): The extracted model answer.
+            short_answer (str): The ground truth answer.
+
+        Returns:
+            int: 1 if they match, 0 otherwise.
+        """
         if short_model_answer.lower().strip() == short_answer.lower().strip():
             return 1
         else:
@@ -87,6 +133,16 @@ class Judge:
 
 
     def math_verify(self, short_model_answer: str, short_answer: str):
+        """
+        Uses the `math_verify` library to check for mathematical equivalence.
+
+        Args:
+            short_model_answer (str): The extracted model answer.
+            short_answer (str): The ground truth answer.
+
+        Returns:
+            int | None: 1 if equivalent, 0 if not, None if verification failed or library missing.
+        """
         @timeout_limit(5)
         def parse_and_verify(short_model_answer: str, short_answer: str):
             short_model_answer_parsed = parse(short_model_answer, parsing_timeout=None)
@@ -109,6 +165,18 @@ class Judge:
 
 
     def llm_judge(self, question: str, model_answer: str, answer: str, solution: str=None):
+        """
+        Uses an LLM to judge the correctness of the model answer given the question and ground truth.
+
+        Args:
+            question (str): The question text.
+            model_answer (str): The model's full answer.
+            answer (str): The ground truth answer.
+            solution (str, optional): The step-by-step solution (if available).
+
+        Returns:
+            int | None: The score (e.g., 1 or 0) based on `llm_tags`, or None if failed.
+        """
         if isinstance(solution, str) and solution and solution.lower() != "none":
             answer = solution + "\n\nFinal Answer: " + answer
         else:
@@ -130,6 +198,16 @@ class Judge:
 
 
     def get_judge(self, ques_dict):
+        """
+        Evaluates a single question dictionary using enabled methods (Exact Match, Math Verify, LLM Judge).
+        Updates the dictionary with evaluation results.
+
+        Args:
+            ques_dict (dict): A dictionary containing 'question', 'answer', 'model_answer', and optionally 'solution'.
+
+        Returns:
+            dict: The updated dictionary with evaluation metrics.
+        """
         question: str = ques_dict["question"]
         solution: str = ques_dict["solution"] if "solution" in ques_dict else None
         answer: str = ques_dict["answer"]
@@ -240,6 +318,44 @@ class Judge:
 
 
     def __call__(self, ques_dict: Union[dict, list[dict]]):
+        """
+        Evaluates one or more question dictionaries using the configured evaluation methods (Exact Match, Math Verify, LLM Judge).
+
+        This method processes the input dictionary (or list of dictionaries), extracts the model answer(s),
+        and compares them against the ground truth answer using the enabled evaluation strategies.
+        It supports multiple model answer samples separated by `<answer_split>`.
+
+        Args:
+            ques_dict (dict | list[dict]): A single dictionary or a list of dictionaries containing evaluation data.
+                Each dictionary must contain the following keys:
+                - "question" (str): The question text.
+                - "answer" (str): The ground truth answer.
+                - "model_answer" (str): The model's answer. If multiple samples are provided, they should be separated by `<answer_split>`.
+                - "solution" (str, optional): The step-by-step ground truth solution.
+
+        Returns:
+            dict | list[dict]: The input dictionary (or list of dictionaries) updated with the following evaluation metrics:
+
+            **Per-Sample Results (Lists):**
+            - "exact_match_list" (list[int]): A list of 0s and 1s indicating whether each sample in `model_answer` exactly matches the ground truth (case-insensitive).
+            - "math_verify_list" (list[int | None]): A list of 0s and 1s indicating mathematical equivalence for each sample (if `use_math_verify` is True).
+            - "llm_judge_list" (list[int | None]): A list of 0s and 1s indicating correctness as judged by an LLM for each sample (if `use_llm_judge` is True).
+
+            **Single-Sample Metrics (Based on the LAST sample):**
+            - "exact_match" (int): 1 if the **last** sample is an exact match, 0 otherwise.
+            - "math_verify" (int): 1 if the **last** sample is mathematically equivalent, 0 otherwise (if enabled).
+            - "llm_judge" (int): 1 if the **last** sample is correct according to the LLM, 0 otherwise (if enabled).
+
+            **Pass@k Metrics (At least ONE sample is correct):**
+            - "exact_match_pass@k" (int): 1 if **any** sample in the list is an exact match, 0 otherwise.
+            - "math_verify_pass@k" (int): 1 if **any** sample is mathematically equivalent, 0 otherwise (if enabled).
+            - "llm_judge_pass@k" (int): 1 if **any** sample is correct according to the LLM, 0 otherwise (if enabled).
+
+            **PassAll@k Metrics (ALL samples are correct):**
+            - "exact_match_passall@k" (int): 1 if **all** samples are exact matches, 0 otherwise.
+            - "math_verify_passall@k" (int): 1 if **all** samples are mathematically equivalent, 0 otherwise (if enabled).
+            - "llm_judge_passall@k" (int): 1 if **all** samples are correct according to the LLM, 0 otherwise (if enabled).
+        """
         if isinstance(ques_dict, dict):
             return self.get_judge(ques_dict)
 

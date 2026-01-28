@@ -5,6 +5,7 @@ from .server import run_server
 from .utils import timeout_limit, run_with_timeout, parse_think_answer, extract_within_tags, get_all_file_paths, remove_tag, sanitize_text, filter_excessive_repeats, cutoff_text
 from .pdf import read_pdf, extract_markdown_images
 from .skill import structai_skill
+from .judge import Judge
 
 
 __all__ = [
@@ -34,5 +35,6 @@ __all__ = [
     "sanitize_text",
     "cutoff_text",
     "read_pdf",
-    "extract_markdown_images"
+    "extract_markdown_images",
+    "Judge"
 ]
