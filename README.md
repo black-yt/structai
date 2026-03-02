@@ -12,7 +12,7 @@
 </div>
 
 <p align="center">
-  <img src="assets/banner.jpg" alt="banner" width="850">
+  <img src="banner.jpg" alt="banner" width="850">
 </p>
 
 StructAI is a comprehensive utility library for accelerating LLM application development, including multi-agent systems. It offers a robust toolkit for LLM interaction—such as structured outputs, context management, and parallel execution—streamlining development workflows and facilitating the deployment of scalable, production-ready AI systems.
