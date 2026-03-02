@@ -6,10 +6,13 @@ from .utils import timeout_limit, run_with_timeout, parse_think_answer, extract_
 from .pdf import read_pdf, extract_markdown_images
 from .skill import structai_skill
 from .judge import Judge
+from .prompts import prompts
 
+__version__ = "0.1.20"
 
 __all__ = [
     "structai_skill",
+    "prompts",
     "load_file",
     "save_file",
     "print_once",
@@ -36,5 +39,6 @@ __all__ = [
     "cutoff_text",
     "read_pdf",
     "extract_markdown_images",
-    "Judge"
+    "Judge",
+    "__version__"
 ]

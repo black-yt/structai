@@ -1,6 +1,19 @@
-skill = r"""# StructAI
+skill = r"""# StructAI 
+
+[![PyPI version](https://img.shields.io/pypi/v/structai.svg)](https://pypi.org/project/structai/)
 
 StructAI is a comprehensive utility library for accelerating LLM application development, including multi-agent systems. It offers a robust toolkit for LLM interaction—such as structured outputs, context management, and parallel execution—streamlining development workflows and facilitating the deployment of scalable, production-ready AI systems.
+
+## ✨ Key Features
+
+| Feature Category | Description | Key Capabilities |
+| :--- | :--- | :--- |
+| **🤖 LLM Agents** | Powerful wrappers for LLM API interactions. | Structured JSON/Dict output parsing, conversation memory management, automatic retries, timeout handling, multimodal support. |
+| **⚖️ LLM Judge & Arena** | Evaluation framework for LLM responses. | Ground truth exact matching, mathematical equivalence verification (`math_verify`), LLM-as-a-judge correctness, A/B testing (Arena). |
+| **🚀 Concurrency** | Parallel execution utilities. | Easy-to-use thread pool (`multi_thread`) and process pool (`multi_process`) mapping with progress bars. |
+| **📄 PDF & Document** | Advanced document processing. | High-quality PDF parsing via MinerU, Markdown extraction, and embedded image extraction. |
+| **🛠️ Utilities & I/O** | Essential tools for AI workflows. | Auto-detect file loading/saving (JSON, CSV, PT, etc.), text sanitization, tag extraction (`<think>`, `<answer>`), network proxy handling, caching. |
+| **🌟 Claude Skills** | Self-documenting capabilities. | Generates comprehensive Markdown documentation (`structai_skill`) for providing context to Claude/LLMs about this library. |
 
 ## 📚 StructAI Library Documentation
 
@@ -9,6 +22,7 @@ StructAI is a comprehensive utility library for accelerating LLM application dev
 - [🌟 Skill](#skill)
   - [`structai_skill`](#structai_skill)
 - [🤖 LLMs/vLLMs](#llmsvllms)
+  - [`prompts`](#prompts)
   - [`LLMAgent Class`](#llmagent-class)
     - [`initialization`](#initialization)
     - [`__call__`](#__call__)
@@ -72,6 +86,31 @@ python -c "from structai import structai_skill; print(structai_skill())" > struc
 [Back to Table of Contents](#table-of-contents)
 
 ### LLMs/vLLMs
+
+#### `prompts`
+
+A dictionary containing predefined LLM prompts for various evaluation tasks, such as LLM-as-a-judge and Arena comparisons.
+
+| Prompt Name | Description | kwargs |
+| :--- | :--- | :--- |
+| `llm_judge_closed_answer` | Evaluates mathematical and logical equivalence between a model answer and a ground truth answer. | `prompt_tmp` (str): template with `{question}`, `{answer}`, `{model_answer}` placeholders; `llm_tags` (dict): `{"correct": 1, "incorrect": 0}` |
+| `llm_judge_arena` | Compares two answers (Answer A and Answer B) to an open-ended question and determines which is better overall. | `prompt_tmp` (str): template with `{question}`, `{answer}` (Answer A), `{model_answer}` (Answer B) placeholders; `llm_tags` (dict): `{"A": 0, "B": 1}` |
+
+*   **Example**:
+```python
+from structai import prompts
+
+# Access the prompt template and tags for closed answer evaluation
+closed_answer_prompt = prompts["llm_judge_closed_answer"]["prompt_tmp"]
+tags = prompts["llm_judge_closed_answer"]["llm_tags"]
+
+print(closed_answer_prompt)
+# Output:
+# # Role
+# You are a precise mathematical and logical evaluator...
+```
+
+[Back to Table of Contents](#table-of-contents)
 
 #### `LLMAgent` Class
 
@@ -246,8 +285,15 @@ This method processes the input dictionary (or list of dictionaries), extracts t
         - `"math_verify_passall@k"` (int): 1 if **all** samples are mathematically equivalent, 0 otherwise (if enabled).
         - `"llm_judge_passall@k"` (int): 1 if **all** samples are correct according to the LLM, 0 otherwise (if enabled).
 
+        **LLM Arena Metrics (If `prompt_tmp` and `llm_tags` are set to `llm_judge_arena`):**
+        In Arena mode, `llm_judge` (and each element in `llm_judge_list`) is `1` if `model_answer` (Answer B) is better, or `0` if `answer` (Answer A) is better.
+
 *   **Example**:
 ```python
+from structai import Judge, prompts
+
+judge = Judge()
+
 ques_dict = {
     "question": "1+1=?",
     "answer": "2",
@@ -359,6 +405,22 @@ results = judge(ques_dicts)
         "llm_judge_passall@k": 0
     }
 ]
+
+# Using LLM Arena for A/B testing
+arena_judge = Judge(
+    prompt_tmp=prompts["llm_judge_arena"]["prompt_tmp"],
+    llm_tags=prompts["llm_judge_arena"]["llm_tags"],
+    use_math_verify=False
+)
+
+arena_data = {
+    "question": "What are the benefits of learning Python?",
+    "answer": "Python is great.", # Answer A
+    "model_answer": "Python is easy to read, has a large ecosystem, and is widely used in data science and web development." # Answer B
+}
+
+arena_result = arena_judge(arena_data)
+# If the LLM prefers model_answer (Answer B), arena_result["llm_judge"] will be 1.
 ```
 
 [Back to Table of Contents](#table-of-contents)

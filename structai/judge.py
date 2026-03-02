@@ -2,39 +2,12 @@ from .mp import multi_thread
 from .utils import remove_tag, timeout_limit, parse_think_answer
 from .io import print_once
 from .llm_api import LLMAgent
+from .prompts import prompts
 from typing import Union
 
 
-default_prompt_tmp = """# Role
-You are a precise mathematical and logical evaluator. Your task is to compare a Model Answer against a Ground Truth Answer based on a given Question.
-
-# Evaluation Criteria
-1. **Numerical Equivalence**: Numbers must be mathematically equal even if formatted differently (e.g., 0.5 == 1/2, 1e-3 == 0.001, 2.0 == 2).
-2. **Symbolic Equivalence**: Mathematical expressions should be equivalent (e.g., x + y == y + x).
-3. **Unit Consistency**: If units are present, they must be compatible or correctly converted.
-4. **Contextual Meaning**: If the answer is text-based, the core meaning must match the Ground Truth, ignoring minor paraphrasing or capitalization.
-
-# Data
-<question>
-{question}
-</question>
-
-<answer>
-{answer}
-</answer>
-
-<model_answer>
-{model_answer}
-</model_answer>
-
-# Instruction
-1. Mentally analyze if the Model Answer is mathematically or logically equivalent to the Ground Truth Answer.
-2. Ignore formatting differences (like LaTeX vs. plain text) as long as the value is correct.
-3. If the Model Answer is equivalent, the result is "correct".
-4. If there is a numerical discrepancy or logical error, the result is "incorrect".
-
-# Final Output Format
-Output ONLY the string "correct" or "incorrect". Do not include any explanations, punctuation, or additional text."""
+default_prompt_tmp = prompts["llm_judge_closed_answer"]["prompt_tmp"]
+default_llm_tags = prompts["llm_judge_closed_answer"]["llm_tags"]
 
 
 class Judge:
@@ -58,7 +31,7 @@ class Judge:
                 use_tqdm=True,
                 use_math_verify=True,
                 use_llm_judge=True,
-                llm_tags={"correct": 1, "incorrect": 0},
+                llm_tags=default_llm_tags,
                 workers=100
         ):
         """
