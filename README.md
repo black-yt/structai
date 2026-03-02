@@ -5,7 +5,7 @@
 <div align="center">
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.6+-yellow.svg)](https://www.python.org/)
 [![GitHub](https://img.shields.io/badge/GitHub-000000?logo=github&logoColor=white)](https://github.com/black-yt/structai)&#160;
 [![PyPI version](https://img.shields.io/pypi/v/structai.svg)](https://pypi.org/project/structai/)
 
