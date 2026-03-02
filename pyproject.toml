@@ -30,5 +30,5 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/black-yt/structai"
 
-[tool.setuptools.packages.find]
-include = ["structai*"]
+[tool.setuptools]
+packages = ["structai"]
