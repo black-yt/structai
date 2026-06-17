@@ -8,7 +8,7 @@ from .skill import structai_skill
 from .judge import Judge
 from .prompts import prompts
 
-__version__ = "0.1.22"
+__version__ = "0.1.23"
 
 __all__ = [
     "structai_skill",
