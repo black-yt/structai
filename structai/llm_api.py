@@ -238,6 +238,17 @@ def extract_text_outputs(result) -> list[str]:
     return outputs
 
 
+def _completion_token_limit_kwargs(model_version: str, max_tokens: int | None) -> dict[str, int]:
+    """Return the Chat Completions token-limit argument for the model family."""
+    if max_tokens is None:
+        return {}
+
+    model_name = (model_version or "").lower().strip().rsplit("/", 1)[-1]
+    if model_name.startswith(("gpt-5", "o1", "o3", "o4")):
+        return {"max_completion_tokens": max_tokens}
+    return {"max_tokens": max_tokens}
+
+
 def print_messages(messages, user_color="cyan", ai_color="yellow", label_text_color="grey"):
     """
     Print chat messages with colored labels and text.
@@ -391,13 +402,14 @@ class LLMAgent:
                 response = self.client.responses.create(**create_kwargs)
                 assistant_responses = extract_text_outputs(response)
         else:
-            response = self.client.chat.completions.create(
-                model=self.model_version,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                n=n,
-            )
+            create_kwargs = {
+                "model": self.model_version,
+                "messages": messages,
+                "temperature": temperature,
+                "n": n,
+            }
+            create_kwargs.update(_completion_token_limit_kwargs(self.model_version, max_tokens))
+            response = self.client.chat.completions.create(**create_kwargs)
             assistant_responses = extract_text_outputs(response)
         
         return assistant_responses
