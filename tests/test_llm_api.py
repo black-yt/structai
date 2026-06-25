@@ -9,6 +9,8 @@ from PIL import Image
 from structai.llm_api import (
     LLMAgent,
     _completion_token_limit_kwargs,
+    _encode_image_data_url,
+    encode_image,
     extract_text_outputs,
     messages_to_responses_input,
     str2dict,
@@ -68,23 +70,50 @@ class CompletionTokenLimitTests(unittest.TestCase):
 
 
 class ImagePayloadTests(unittest.TestCase):
-    def test_image_payload_declares_png_matching_encoded_bytes(self):
+    def _run_with_image(self, image_path):
         agent = LLMAgent(api_key="test-key", model_version="gpt-4.1-mini")
         fake_client = _FakeClient()
         agent.client = fake_client
 
+        self.assertEqual(agent._llm_api_impl("describe", image_paths=[str(image_path)]), ["ok"])
+
+        sent_kwargs = fake_client.chat_completions.last_kwargs
+        content = sent_kwargs["messages"][-1]["content"]
+        return content[1]["image_url"]["url"]
+
+    def test_jpeg_payload_declares_jpeg_matching_encoded_bytes(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             image_path = Path(tmpdir) / "input.jpg"
             Image.new("RGB", (2, 2), color=(255, 0, 0)).save(image_path, format="JPEG")
 
-            self.assertEqual(agent._llm_api_impl("describe", image_paths=[str(image_path)]), ["ok"])
+            image_url = self._run_with_image(image_path)
 
-        sent_kwargs = fake_client.chat_completions.last_kwargs
-        content = sent_kwargs["messages"][-1]["content"]
-        image_url = content[1]["image_url"]["url"]
+        self.assertTrue(image_url.startswith("data:image/jpeg;base64,"))
+        encoded = image_url.split(",", 1)[1]
+        self.assertEqual(base64.b64decode(encoded)[:3], b"\xff\xd8\xff")
+
+    def test_png_payload_declares_png_matching_encoded_bytes(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            image_path = Path(tmpdir) / "input.png"
+            Image.new("RGBA", (2, 2), color=(255, 0, 0, 128)).save(image_path, format="PNG")
+
+            image_url = self._run_with_image(image_path)
+
         self.assertTrue(image_url.startswith("data:image/png;base64,"))
         encoded = image_url.split(",", 1)[1]
         self.assertEqual(base64.b64decode(encoded)[:8], b"\x89PNG\r\n\x1a\n")
+
+    def test_image_without_source_format_defaults_to_png(self):
+        image_url = _encode_image_data_url(Image.new("RGB", (2, 2), color=(0, 255, 0)))
+
+        self.assertTrue(image_url.startswith("data:image/png;base64,"))
+        encoded = image_url.split(",", 1)[1]
+        self.assertEqual(base64.b64decode(encoded)[:8], b"\x89PNG\r\n\x1a\n")
+
+    def test_encode_image_accepts_explicit_jpg_alias(self):
+        encoded = encode_image(Image.new("RGB", (2, 2), color=(0, 0, 255)), image_format="jpg")
+
+        self.assertEqual(base64.b64decode(encoded)[:3], b"\xff\xd8\xff")
 
 
 class ParsingAndResponseShapeTests(unittest.TestCase):

@@ -15,6 +15,11 @@ from .io import load_file
 from .utils import run_with_timeout, sanitize_text
 from .mp import multi_thread
 
+_IMAGE_FORMAT_MEDIA_TYPES = {
+    "JPEG": "image/jpeg",
+    "PNG": "image/png",
+}
+
 
 def str2dict(s: str) -> dict:
     """
@@ -65,19 +70,45 @@ def str2list(s: str) -> list:
     return l
 
 
-def encode_image(image_obj: Image.Image) -> str:
+def _normalize_image_format(image_obj: Image.Image, image_format: str | None = None) -> str:
+    fmt = (image_format or getattr(image_obj, "format", None) or "PNG").upper()
+    if fmt == "JPG":
+        fmt = "JPEG"
+    if fmt not in _IMAGE_FORMAT_MEDIA_TYPES:
+        fmt = "PNG"
+    return fmt
+
+
+def _prepare_image_for_format(image_obj: Image.Image, image_format: str) -> Image.Image:
+    if image_format == "JPEG" and image_obj.mode not in ("RGB", "L"):
+        return image_obj.convert("RGB")
+    return image_obj
+
+
+def encode_image(image_obj: Image.Image, image_format: str | None = None) -> str:
     """
     Encodes a PIL Image object into a base64 string.
 
     Args:
         image_obj (PIL.Image.Image): The image object to encode.
+        image_format (str | None): Optional output format. If omitted, the
+            image object's source format is preserved for JPEG/PNG and falls
+            back to PNG otherwise.
 
     Returns:
         str: The base64 encoded string.
     """
+    normalized_format = _normalize_image_format(image_obj, image_format)
     buffered = io.BytesIO()
-    image_obj.save(buffered, format="PNG")
+    prepared_image = _prepare_image_for_format(image_obj, normalized_format)
+    prepared_image.save(buffered, format=normalized_format)
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+
+def _encode_image_data_url(image_obj: Image.Image) -> str:
+    image_format = _normalize_image_format(image_obj)
+    media_type = _IMAGE_FORMAT_MEDIA_TYPES[image_format]
+    return f"data:{media_type};base64,{encode_image(image_obj, image_format)}"
 
 
 def add_no_proxy_if_private(url: str):
@@ -352,18 +383,14 @@ class LLMAgent:
             for image_path in image_paths:
                 try:
                     img = load_file(image_path)
-                    ima_str = encode_image(img)
+                    image_url = _encode_image_data_url(img)
                 except:
                     continue
 
                 content.append({
                     "type": "image_url",
                     "image_url": {
-                        # encode_image() always emits PNG bytes (save format="PNG"),
-                        # so declare PNG to match. Declaring jpeg here makes
-                        # media-type-strict providers (Anthropic / Google / Bedrock,
-                        # incl. via OpenRouter) reject the request with a 400.
-                        "url": f"data:image/png;base64,{ima_str}",
+                        "url": image_url,
                     }
                 })
         
