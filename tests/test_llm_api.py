@@ -1,5 +1,10 @@
 import unittest
+import base64
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
+
+from PIL import Image
 
 from structai.llm_api import (
     LLMAgent,
@@ -60,6 +65,26 @@ class CompletionTokenLimitTests(unittest.TestCase):
         sent_kwargs = fake_client.chat_completions.last_kwargs
         self.assertEqual(sent_kwargs["max_completion_tokens"], 500)
         self.assertNotIn("max_tokens", sent_kwargs)
+
+
+class ImagePayloadTests(unittest.TestCase):
+    def test_image_payload_declares_png_matching_encoded_bytes(self):
+        agent = LLMAgent(api_key="test-key", model_version="gpt-4.1-mini")
+        fake_client = _FakeClient()
+        agent.client = fake_client
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            image_path = Path(tmpdir) / "input.jpg"
+            Image.new("RGB", (2, 2), color=(255, 0, 0)).save(image_path, format="JPEG")
+
+            self.assertEqual(agent._llm_api_impl("describe", image_paths=[str(image_path)]), ["ok"])
+
+        sent_kwargs = fake_client.chat_completions.last_kwargs
+        content = sent_kwargs["messages"][-1]["content"]
+        image_url = content[1]["image_url"]["url"]
+        self.assertTrue(image_url.startswith("data:image/png;base64,"))
+        encoded = image_url.split(",", 1)[1]
+        self.assertEqual(base64.b64decode(encoded)[:8], b"\x89PNG\r\n\x1a\n")
 
 
 class ParsingAndResponseShapeTests(unittest.TestCase):
