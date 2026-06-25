@@ -359,7 +359,11 @@ class LLMAgent:
                 content.append({
                     "type": "image_url",
                     "image_url": {
-                        "url": f"data:image/jpeg;base64,{ima_str}",
+                        # encode_image() always emits PNG bytes (save format="PNG"),
+                        # so declare PNG to match. Declaring jpeg here makes
+                        # media-type-strict providers (Anthropic / Google / Bedrock,
+                        # incl. via OpenRouter) reject the request with a 400.
+                        "url": f"data:image/png;base64,{ima_str}",
                     }
                 })
         
